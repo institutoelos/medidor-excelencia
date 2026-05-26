@@ -44,6 +44,9 @@ router = APIRouter()
 _BASE = os.path.dirname(os.path.dirname(__file__))
 templates = Jinja2Templates(directory=os.path.join(_BASE, "templates"))
 
+# Em produção (HTTPS) marcamos o cookie como Secure. Liga via env var.
+_COOKIE_SECURE = os.environ.get("MEDIDOR_COOKIE_SECURE", "").lower() in ("1", "true", "yes")
+
 
 # ─── Agrupamento ───────────────────────────────────────────────────────
 
@@ -199,6 +202,7 @@ async def submit_form_colab(token: str, request: Request, db: Session = Depends(
         max_age=60 * 60 * 24 * 180,  # 180 dias
         httponly=True,
         samesite="lax",
+        secure=_COOKIE_SECURE,
     )
     return response
 
@@ -294,6 +298,7 @@ async def submit_form_socio(token: str, request: Request, db: Session = Depends(
         max_age=60 * 60 * 24 * 180,
         httponly=True,
         samesite="lax",
+        secure=_COOKIE_SECURE,
     )
     return response
 

@@ -144,6 +144,57 @@ curl -o relatorio.pdf http://127.0.0.1:8000/relatorio/1/pdf
 
 O PDF usa A4, fonte DM Serif Display + DM Sans (carregadas do Google Fonts pelo Chromium do Playwright), e respeita a paleta ELO.
 
+## Deploy em produção — Railway + Postgres + domínio Namecheap
+
+O repo já vem pronto para subir no Railway. Passo a passo:
+
+### 1. Criar projeto no Railway
+1. Acesse https://railway.app e faça login com GitHub
+2. **New Project** → **Deploy from GitHub repo** → selecione `institutoelos/medidor-excelencia`
+3. Railway detecta o `Dockerfile` e começa o build
+
+### 2. Adicionar banco Postgres
+1. No dashboard do projeto → **+ New** → **Database** → **Add PostgreSQL**
+2. Railway cria o serviço Postgres e injeta `DATABASE_URL` automaticamente no app
+3. Aguarde o app re-deployar com o banco anexado
+
+### 3. Configurar variáveis de ambiente
+No serviço da app (não no Postgres), aba **Variables**, adicione:
+
+| Variável | Valor |
+|---|---|
+| `MEDIDOR_ADMIN_USER` | `admin` (ou outro) |
+| `MEDIDOR_ADMIN_PASSWORD` | uma senha forte sua |
+| `MEDIDOR_COOKIE_SECURE` | `1` |
+
+(`DATABASE_URL` e `PORT` o Railway já cuida.)
+
+### 4. Conectar `exc.decifro.com` (subdomínio Namecheap)
+1. Railway → seu serviço → **Settings** → **Networking** → **Custom Domain**
+2. Adicione `exc.decifro.com`
+3. Railway mostra um valor de CNAME, algo como `xxxxx.up.railway.app`
+4. No Namecheap → Domain List → **Manage** em `decifro.com` → **Advanced DNS**
+5. Add new record:
+   - **Type:** CNAME Record
+   - **Host:** `exc`
+   - **Value:** `xxxxx.up.railway.app` (o que o Railway mostrou)
+   - **TTL:** Automatic
+6. Aguarde a propagação DNS (5–10 minutos) e o HTTPS provisionar automaticamente
+
+### 5. Popular cenário de teste (opcional, primeira rodada)
+Para começar com a Empresa Teste já carregada, abra **Settings** → **Service**, copie o `Service ID` e use o CLI do Railway:
+```
+railway run python scripts/seed_empresa_teste.py --reset
+```
+
+Ou apenas use o painel `/admin` para criar suas próprias empresas.
+
+### Custo estimado
+- Railway: ~US$5/mês de crédito grátis, depois ~US$5–10/mês pelo uso real (app + Postgres pequeno)
+- Domínio Namecheap: o que você já paga
+
+---
+
 ## Documentação adicional
 
 - `PROGRESSO.md` — checklist do que foi construído

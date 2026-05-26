@@ -1,0 +1,17 @@
+.git/
+.github/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+tests/
+data/
+relatorios_gerados/
+design-handoff/
+*.md
+.env
+.venv/
+venv/
+.idea/
+.vscode/
+.DS_Store

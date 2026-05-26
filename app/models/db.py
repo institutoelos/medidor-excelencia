@@ -39,12 +39,26 @@ DB_PATH = os.environ.get(
 )
 DB_PATH = os.path.abspath(DB_PATH)
 
-DATABASE_URL = f"sqlite:///{DB_PATH}"
+# Em produção (Railway), DATABASE_URL é injetada quando o serviço Postgres é
+# adicionado. Localmente, sem essa var, caímos no SQLite por padrão.
+_DATABASE_URL_RAW = os.environ.get("DATABASE_URL")
+if _DATABASE_URL_RAW:
+    # Railway/Heroku às vezes entregam postgres:// — SQLAlchemy 2 quer postgresql://
+    if _DATABASE_URL_RAW.startswith("postgres://"):
+        _DATABASE_URL_RAW = _DATABASE_URL_RAW.replace("postgres://", "postgresql+psycopg://", 1)
+    elif _DATABASE_URL_RAW.startswith("postgresql://"):
+        _DATABASE_URL_RAW = _DATABASE_URL_RAW.replace("postgresql://", "postgresql+psycopg://", 1)
+    DATABASE_URL = _DATABASE_URL_RAW
+    _IS_SQLITE = False
+else:
+    DATABASE_URL = f"sqlite:///{DB_PATH}"
+    _IS_SQLITE = True
 
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False},
+    connect_args={"check_same_thread": False} if _IS_SQLITE else {},
     echo=False,
+    pool_pre_ping=not _IS_SQLITE,  # útil em conexões longas com Postgres
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -165,7 +179,8 @@ class RespostaRetencao(Base):
 
 
 def init_db() -> None:
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    if _IS_SQLITE:
+        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     Base.metadata.create_all(bind=engine)
 
 

@@ -46,3 +46,12 @@ pdf:
 clean:
 	rm -f data/medidor.db data/medidor.db-journal
 	@echo "banco apagado"
+
+docker-build:
+	docker build -t medidor-excelencia .
+
+docker-run:
+	@echo "Acesse http://127.0.0.1:8000  (login admin/elos)"
+	docker run --rm -p 8000:8000 \
+		-e MEDIDOR_ADMIN_USER=admin -e MEDIDOR_ADMIN_PASSWORD=elos \
+		medidor-excelencia
