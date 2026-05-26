@@ -25,25 +25,34 @@
    ──────────────────────────────────────────────────────────────── #}
 <section class="page cover" id="capa">
   <div class="cover__top">
-    <div class="cover__brand">Medidor de <em>Excelência</em></div>
+    <div class="cover__brand-row">
+      <img src="/static/img/signo-elos.png" alt="ELOS" class="cover__sigil">
+      <div class="cover__brand">Medidor de <em>Excelência</em></div>
+    </div>
     <p class="eyebrow gap-12">ELO Business — Pilar Pessoas · Rodada {{ d.rodada.tipo }}</p>
     <h1 class="cover__title">{{ d.empresa.nome }}</h1>
     <p class="cover__sub">Diagnóstico do Pilar Pessoas — vivência do time, percepção do sócio, gap entre os dois, e a base do trabalho de excelência empresarial nos próximos meses.</p>
   </div>
-  <dl class="cover__meta">
-    <div>
-      <dt>Data</dt>
-      <dd>{{ d.rodada.data_inicio.strftime("%d/%m/%Y") }}</dd>
+  <div class="cover__bottom">
+    <dl class="cover__meta">
+      <div>
+        <dt>Data</dt>
+        <dd>{{ d.rodada.data_inicio.strftime("%d/%m/%Y") }}</dd>
+      </div>
+      <div>
+        <dt>Rodada</dt>
+        <dd>{{ d.rodada.tipo }}</dd>
+      </div>
+      <div>
+        <dt>Respondentes</dt>
+        <dd>{{ d.contagens.colaboradores }} + {{ d.contagens.socios }}</dd>
+      </div>
+    </dl>
+    <div class="cover__strip">
+      <img src="/static/img/logo-elo-business.png" alt="ELO Business" class="cover__wordmark">
+      <span class="cover__by">por <img src="/static/img/logo-elos.png" alt="ELOS"></span>
     </div>
-    <div>
-      <dt>Rodada</dt>
-      <dd>{{ d.rodada.tipo }}</dd>
-    </div>
-    <div>
-      <dt>Respondentes</dt>
-      <dd>{{ d.contagens.colaboradores }} + {{ d.contagens.socios }}</dd>
-    </div>
-  </dl>
+  </div>
 </section>
 
 {# ────────────────────────────────────────────────────────────────
