@@ -5,28 +5,36 @@
 <section class="form-hero">
   <p class="eyebrow">Diagnóstico do Pilar Pessoas — Versão Colaborador</p>
   <h1 class="serif">{{ empresa.nome }}</h1>
-  <p>Sua resposta é individualmente confidencial. Leva cerca de 12 minutos. Você pode pausar e voltar — o sistema salva seu progresso neste navegador automaticamente.</p>
+  <p>Esse diagnóstico é parte do programa <strong>ELO Business</strong> — Programa de Excelência Empresarial, contratado pela sua empresa. Suas respostas são <strong>individualmente confidenciais</strong>. Você pode pausar e voltar — o sistema salva seu progresso neste navegador automaticamente.</p>
 </section>
 
-<div class="progress-bar"><div class="progress-bar__fill"></div></div>
-<div style="display:flex; justify-content: space-between; margin-bottom: 24px;">
-  <span id="progress-label" class="eyebrow">0% preenchido</span>
-  <span id="saved-pill" class="saved-pill">Aguardando primeira resposta…</span>
+<div class="confid-strip">
+  <strong>Como tratamos seus dados:</strong> respostas individuais não são compartilhadas com a empresa. O relatório final mostra apenas dados agregados, e qualquer recorte com menos de <strong>5 respondentes</strong> é suprimido para preservar seu anonimato.
+</div>
+
+<div class="progress-sticky">
+  <div class="progress-bar"><div class="progress-bar__fill"></div></div>
+  <div class="info">
+    <span><strong id="progress-label">0%</strong></span>
+    <span id="time-label">Estimativa: ~12 min (média histórica)</span>
+  </div>
+  <div class="info">
+    <span class="eyebrow" id="pilar-label">Início</span>
+    <span class="saved-pill" id="saved-pill">aguardando primeira resposta</span>
+  </div>
 </div>
 
 <form id="form-medidor" method="post" action="/f/colab/{{ token }}/enviar" data-storage-key="medidor-colab-{{ token }}">
 
-  {# ── 58 itens Likert agrupados por pilar/subpilar ───────────────────── #}
-  {% set agrupados = itens_agrupados %}
-  {% for pilar_codigo, pilar_label, subpilares in agrupados %}
-    <h2 class="section-title serif">{{ pilar_label }}</h2>
-    <p class="section-sub">Para cada afirmação, marque a opção que melhor descreve a sua vivência nesta empresa hoje.</p>
+  {% for pilar_codigo, pilar_label, subpilares in itens_agrupados %}
+    <h2 class="section-title serif" data-pilar="{{ pilar_label }}">{{ pilar_label }}</h2>
+    <p class="section-sub">Para cada afirmação, marque a opção que melhor descreve a sua vivência nesta empresa hoje. <strong>{{ subpilares | sum(attribute=2, start=[]) | length }} itens</strong> nesta seção.</p>
 
     {% for sub_codigo, sub_label, itens in subpilares %}
-      <p class="eyebrow" style="margin-top:24px;">{{ sub_label }}</p>
+      <p class="eyebrow" style="margin-top:24px;">{{ sub_label }} · {{ itens | length }} itens</p>
       {% for num, texto in itens %}
         <div class="item">
-          <div class="item__num">Item {{ num }}</div>
+          <div class="item__num">Item {{ num }} de 58</div>
           <div class="item__texto">{{ texto }}</div>
           <div class="likert">
             {% for v, rotulo in likert %}
@@ -42,8 +50,7 @@
     {% endfor %}
   {% endfor %}
 
-  {# ── Pergunta-âncora ──────────────────────────────────────────────── #}
-  <h2 class="section-title serif">Pergunta síntese</h2>
+  <h2 class="section-title serif" data-pilar="Pergunta síntese">Pergunta síntese</h2>
   <p class="section-sub">Levando tudo em conta agora.</p>
   <div class="item">
     <div class="item__texto">{{ ancora_texto }}</div>
@@ -58,10 +65,10 @@
     </div>
   </div>
 
-  {# ── NPS ───────────────────────────────────────────────────────────── #}
-  <h2 class="section-title serif">Recomendação</h2>
+  <h2 class="section-title serif" data-pilar="Recomendação">Recomendação</h2>
   <div class="item">
     <div class="item__texto">{{ nps_pergunta }}</div>
+    <p class="muted" style="font-size:12px; margin: 0 0 12px;">0 = jamais indicaria · 10 = indicaria com convicção</p>
     <div class="nps-grid">
       {% for n in range(0, 11) %}
         <label><input type="radio" name="nps" value="{{ n }}">{{ n }}</label>
@@ -69,8 +76,7 @@
     </div>
   </div>
 
-  {# ── Retenção ─────────────────────────────────────────────────────── #}
-  <h2 class="section-title serif">Permanência</h2>
+  <h2 class="section-title serif" data-pilar="Permanência">Permanência</h2>
   <div class="item">
     <div class="item__texto">{{ retencao_pergunta }}</div>
     <ul class="opt-list">
@@ -84,14 +90,13 @@
       {% endfor %}
     </ul>
     <div style="margin-top:12px;">
-      <label class="eyebrow" for="retencao_outro">Se marcou "Outro motivo", descreva:</label>
+      <label class="eyebrow" for="retencao_outro">Descreva o motivo (obrigatório se marcou "Outro"):</label>
       <input type="text" class="textinput" id="retencao_outro" name="retencao_outro" placeholder="(opcional)">
     </div>
   </div>
 
-  {# ── Demográficos ─────────────────────────────────────────────────── #}
-  <h2 class="section-title serif">Sobre você</h2>
-  <p class="section-sub">Usado apenas para cruzar dados agregados no relatório. Recortes com menos de 5 respondentes são suprimidos para preservar anonimato.</p>
+  <h2 class="section-title serif" data-pilar="Sobre você">Sobre você</h2>
+  <p class="section-sub">Usado apenas para cruzar dados agregados no relatório. Recortes com menos de 5 respondentes são suprimidos.</p>
   <div class="item">
     <label class="eyebrow" for="tempo_de_casa">Tempo de casa</label>
     <select class="select" id="tempo_de_casa" name="tempo_de_casa" required>

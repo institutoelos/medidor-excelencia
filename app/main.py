@@ -28,11 +28,12 @@ def _startup() -> None:
 def root():
     return {
         "sistema": "Medidor de Excelência ELOS — Pilar Pessoas",
-        "versao": "1.0",
+        "versao": "1.1",
         "rotas": {
-            "admin": "/admin",
+            "admin": "/admin (requer login)",
             "formulario_colaborador": "/f/colab/{token}",
             "formulario_socio": "/f/socio/{token}",
             "relatorio": "/relatorio/{rodada_id}",
         },
+        "admin_default_user": "admin / elos (alterar via MEDIDOR_ADMIN_USER e MEDIDOR_ADMIN_PASSWORD)",
     }

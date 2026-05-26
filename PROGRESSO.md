@@ -7,39 +7,67 @@
 - 25 testes unitários, todos verdes
 
 ## ✅ Etapa 2 — Formulários
-- `/f/colab/{token}` — 58 Likert + âncora + NPS + retenção + 3 demográficos
-- `/f/socio/{token}` — 41 espelho + 17 divergentes + âncora
-- Persistência de progresso via localStorage, validação obrigatória, redirect para /f/obrigado
-- Visual ELO Business (paleta + DM Serif Display + DM Sans)
+- `/f/colab/{token}` e `/f/socio/{token}` com 58 itens + extras
+- Persistência localStorage, validação obrigatória, redirect /f/obrigado
+- Visual ELO Business (DM Serif Display + DM Sans)
 
-## ✅ Etapa 3 — Relatório HTML
+## ✅ Etapa 3 — Relatório HTML + PDF
 - 12 seções da especificação §14
 - SVG nativo (gauge semicircular, barras, gap duplo)
-- Gate visual aciona em pilar < 60 com alerta vermelho no topo
-- Cortes demográficos com supressão automática de segmentos < 5
-- A4 imprimível, paleta ELO Business
+- Gate visual em pilar < 60
+- Cortes <5 suprimidos
+- PDF A4 via Playwright/Chromium 1.56
 
-## ✅ Etapa 4 — Painel admin
-- `/admin` lista empresas e rodadas
-- Criar empresa (nome + áreas)
-- Abrir rodada (entrada/6m/12m/18m/24m) gera links únicos
-- Contagem de respondentes em tempo real
-- Fechar/reabrir rodada
-- Botões "Gerar Relatório" e "PDF"
+## ✅ Etapa 4 — Painel admin (versão 1)
+- Lista empresas e rodadas, abre rodada, gera links únicos
 
 ## ✅ Etapa 5 — Seed Empresa Teste
-- 45 colaboradores distribuídos em 5 áreas (vendas 12, operações 14, financeiro 11, rh 5, engenharia 3 — esta suprimida pela regra de 5+)
-- 2 sócios
-- Cenário 1 ("Empresa Teste S.A."): Medidor 70.0 sem gate
-- Cenário 2 ("Empresa Teste (Gate Ativo)"): Feedback travado em 0.0, gate ativo
 
-## ✅ Etapa 6 — Exportação PDF
-- Playwright/Chromium 1.56 + chromium-1194
-- `/relatorio/{id}/pdf` gera PDF A4, ~19 páginas, ~290 KB
-- PDFs de exemplo em `relatorios_gerados/`
+## ✅ Etapa 6 — Hardening de UX (versão 2)
+Após análise de UX como cliente, todas as melhorias foram aplicadas:
 
-## ✅ Etapa 7 — Documentação
-- README.md com 5 passos para rodar localmente
-- Makefile: install, seed, demo, dev, test, pdf, clean
-- DECISOES.md com 13 decisões frente a lacunas/ambiguidades
-- RELATORIO_FINAL.md com checklist de entrega
+### Segurança
+- **Login HTTPBasic** no painel admin via `MEDIDOR_ADMIN_USER` / `MEDIDOR_ADMIN_PASSWORD` (default `admin/elos`)
+- Cookie de dedup por respondente — previne envio duplicado a partir do mesmo navegador
+- Tela "Você já respondeu" no lugar do form para respondente que voltar
+
+### Painel mentor
+- Página dedicada por rodada (`/admin/rodadas/{id}`)
+- Painel de coleta em tempo real (polling 10s) — contagem por colab/sócio, % vs esperado, ritmo nas últimas 24h
+- Métricas parciais (Medidor + 3 pilares) quando há 5+ respondentes
+- Busca de empresas por nome
+- Cadastro de `tamanho_time_esperado` e `qtd_socios_esperados`
+- Edição inline de empresa
+- Botão "Copiar link" com feedback visual
+- QR code SVG inline para cada link
+- Confirmação ao abrir nova rodada
+- Botão PDF desabilitado durante geração (fetch+blob no front)
+
+### Formulário (colaborador e sócio)
+- Barra de progresso **sticky** (visível ao rolar)
+- Label de **pilar atual** atualizado conforme scroll
+- Estimativa de tempo restante baseada no ritmo real do respondente
+- Strip de confidencialidade explícita logo após o hero
+- Numeração "Item X de 58"
+- Sigil de brand no header
+- Validação inline: "Outro motivo" obriga descrição
+- NPS com rótulos "0 = jamais · 10 = com convicção"
+
+### Sócio específico
+- Strip "Agora sobre você, o sistema que você desenhou" antes dos 17 divergentes (por pilar)
+- Aviso reforçado: "não tem certo nem errado"
+
+### Pós-envio
+- Tela "Obrigado" rica e brand-aware
+- **Recibo** com empresa, rodada, data/hora exata, quantidade de itens
+- Versão diferente para colaborador e sócio
+
+### Robustez
+- Cascade manual de respostas órfãs (FK polimórfica) — ao deletar empresa, respostas vão junto
+- 35 testes (era 25): + admin auth (4), + dedup form (4), + cascade (1), + originais (25)
+
+## Métricas finais
+- **35 testes pytest verdes** em ~1.8s
+- **Cobertura**: princípios não negociáveis, auth admin, dedup, cascade, todas as métricas
+- **8 tabelas + 2 colunas novas** (`tamanho_time_esperado`, `qtd_socios_esperados`)
+- **Stack adicional**: `httpx`, `qrcode`

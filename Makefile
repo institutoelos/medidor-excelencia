@@ -8,11 +8,14 @@ help:
 	@echo "Comandos:"
 	@echo "  make install   — instala dependências (pip + Playwright Chromium)"
 	@echo "  make seed      — popula banco com Empresa Teste S.A. (45 colab + 2 sócios)"
-	@echo "  make demo      — reset + seed + sobe servidor na porta $(PORT) (estado terminal)"
+	@echo "  make demo      — reset + seed + sobe servidor na porta $(PORT)"
 	@echo "  make dev       — sobe servidor sem mexer no banco"
 	@echo "  make test      — roda pytest"
 	@echo "  make pdf       — exemplo de exportação PDF da rodada 1"
 	@echo "  make clean     — remove banco SQLite local"
+	@echo ""
+	@echo "Login admin padrão: admin / elos"
+	@echo "Alterar via env vars: MEDIDOR_ADMIN_USER e MEDIDOR_ADMIN_PASSWORD"
 
 install:
 	pip install -r requirements.txt

@@ -1,10 +1,10 @@
-"""Rotas dos dois formulários (colaborador e sócio)."""
+"""Rotas dos dois formulários (colaborador e sócio) com dedup por cookie."""
 from __future__ import annotations
 
 import os
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -45,7 +45,7 @@ _BASE = os.path.dirname(os.path.dirname(__file__))
 templates = Jinja2Templates(directory=os.path.join(_BASE, "templates"))
 
 
-# ─── Agrupamento para template ─────────────────────────────────────────
+# ─── Agrupamento ───────────────────────────────────────────────────────
 
 _SUBPILARES_ORDEM_COLAB = {
     PILAR_CULTURA: ["cultura_identidade", "cultura_tribo", "cultura_engajamento", "cultura_lideranca"],
@@ -55,7 +55,6 @@ _SUBPILARES_ORDEM_COLAB = {
 
 
 def _itens_colab_agrupados():
-    """[(pilar_cod, pilar_label, [(sub_cod, sub_label, [(num, texto)])])]"""
     out = []
     for pilar in PILARES:
         secs = []
@@ -67,16 +66,13 @@ def _itens_colab_agrupados():
 
 
 def _itens_socio_agrupados():
-    """Mostra primeiro os 41 espelho por pilar, depois os 17 divergentes por pilar."""
     out = []
     for pilar in PILARES:
         secs = []
-        # Espelho do pilar — agrupados por subpilar (mesmos do colab)
         for sub in _SUBPILARES_ORDEM_COLAB[pilar]:
             itens = [(i[0], i[3]) for i in ITENS_SOCIO_ESPELHO if i[1] == pilar and i[2] == sub]
             if itens:
                 secs.append((SUBPILAR_LABEL[sub] + " (observação do time)", itens))
-        # Divergentes do pilar
         divs = [(i[0], i[3]) for i in ITENS_SOCIO_DIVERGENTE if i[1] == pilar]
         if divs:
             sub_div = "socio_consciencia_" + pilar
@@ -85,7 +81,11 @@ def _itens_socio_agrupados():
     return out
 
 
-# ─── GET formulário colaborador ───────────────────────────────────────
+def _cookie_key(tipo: str, token: str) -> str:
+    return f"med_{tipo}_{token}"
+
+
+# ─── GET / POST colaborador ────────────────────────────────────────────
 
 @router.get("/f/colab/{token}")
 def render_form_colab(token: str, request: Request, db: Session = Depends(get_session)):
@@ -93,7 +93,24 @@ def render_form_colab(token: str, request: Request, db: Session = Depends(get_se
     if rodada is None:
         raise HTTPException(status_code=404, detail="Link de formulário não encontrado.")
     if rodada.status == "fechada":
-        return templates.TemplateResponse("forms/fechada.html", {"request": request, "empresa": rodada.empresa, "rodada": rodada}, status_code=410)
+        return templates.TemplateResponse(
+            "forms/fechada.html",
+            {"request": request, "empresa": rodada.empresa, "rodada": rodada},
+            status_code=410,
+        )
+
+    # Dedup: se já respondeu (cookie), mostra tela de "obrigado" no lugar do form
+    cookie_val = request.cookies.get(_cookie_key("colab", token))
+    if cookie_val:
+        respondente = db.query(RespondenteColab).filter(RespondenteColab.sessao_token == cookie_val).first()
+        if respondente and respondente.finalizado_em:
+            return templates.TemplateResponse("forms/obrigado_colab.html", {
+                "request": request,
+                "empresa": rodada.empresa,
+                "rodada": rodada,
+                "finalizado_em": respondente.finalizado_em,
+            })
+
     return templates.TemplateResponse(
         "forms/colab.html",
         {
@@ -119,15 +136,24 @@ async def submit_form_colab(token: str, request: Request, db: Session = Depends(
         raise HTTPException(status_code=404, detail="Rodada não encontrada.")
     if rodada.status == "fechada":
         raise HTTPException(status_code=410, detail="A coleta desta rodada já foi encerrada.")
-    form = await request.form()
 
-    # Validação: 58 itens + âncora + nps + retenção + 3 demográficos
+    # Dedup pelo cookie: se já submeteu, redireciona pro form (vai mostrar "obrigado")
+    cookie_val = request.cookies.get(_cookie_key("colab", token))
+    if cookie_val:
+        existente = db.query(RespondenteColab).filter(RespondenteColab.sessao_token == cookie_val).first()
+        if existente and existente.finalizado_em:
+            return RedirectResponse(url=f"/f/colab/{token}", status_code=303)
+
+    form = await request.form()
     for num, *_ in ITENS_COLABORADOR:
         if not form.get(f"item_{num}"):
             raise HTTPException(status_code=400, detail=f"Item {num} obrigatório.")
     for campo in ("ancora", "nps", "retencao", "tempo_de_casa", "tipo_de_cargo", "area"):
         if not form.get(campo):
             raise HTTPException(status_code=400, detail=f"Campo {campo} obrigatório.")
+    # Outro motivo obrigatório se marcou "outro"
+    if form.get("retencao") == "outro" and not (form.get("retencao_outro") or "").strip():
+        raise HTTPException(status_code=400, detail="Descreva o motivo se marcou 'Outro'.")
 
     respondente = RespondenteColab(
         rodada_id=rodada.id,
@@ -161,13 +187,23 @@ async def submit_form_colab(token: str, request: Request, db: Session = Depends(
     db.add(RespostaRetencao(
         respondente_id=respondente.id,
         opcao_escolhida=form.get("retencao"),
-        texto_aberto=form.get("retencao_outro") or None,
+        texto_aberto=(form.get("retencao_outro") or "").strip() or None,
     ))
     db.commit()
-    return RedirectResponse(url="/f/obrigado", status_code=303)
+    db.refresh(respondente)
+
+    response = RedirectResponse(url=f"/f/colab/{token}", status_code=303)
+    response.set_cookie(
+        key=_cookie_key("colab", token),
+        value=respondente.sessao_token,
+        max_age=60 * 60 * 24 * 180,  # 180 dias
+        httponly=True,
+        samesite="lax",
+    )
+    return response
 
 
-# ─── GET formulário sócio ─────────────────────────────────────────────
+# ─── GET / POST sócio ──────────────────────────────────────────────────
 
 @router.get("/f/socio/{token}")
 def render_form_socio(token: str, request: Request, db: Session = Depends(get_session)):
@@ -175,7 +211,23 @@ def render_form_socio(token: str, request: Request, db: Session = Depends(get_se
     if rodada is None:
         raise HTTPException(status_code=404, detail="Link de formulário não encontrado.")
     if rodada.status == "fechada":
-        return templates.TemplateResponse("forms/fechada.html", {"request": request, "empresa": rodada.empresa, "rodada": rodada}, status_code=410)
+        return templates.TemplateResponse(
+            "forms/fechada.html",
+            {"request": request, "empresa": rodada.empresa, "rodada": rodada},
+            status_code=410,
+        )
+
+    cookie_val = request.cookies.get(_cookie_key("socio", token))
+    if cookie_val:
+        respondente = db.query(RespondenteSocio).filter(RespondenteSocio.sessao_token == cookie_val).first()
+        if respondente and respondente.finalizado_em:
+            return templates.TemplateResponse("forms/obrigado_socio.html", {
+                "request": request,
+                "empresa": rodada.empresa,
+                "rodada": rodada,
+                "finalizado_em": respondente.finalizado_em,
+            })
+
     return templates.TemplateResponse(
         "forms/socio.html",
         {
@@ -196,8 +248,14 @@ async def submit_form_socio(token: str, request: Request, db: Session = Depends(
         raise HTTPException(status_code=404, detail="Rodada não encontrada.")
     if rodada.status == "fechada":
         raise HTTPException(status_code=410, detail="A coleta desta rodada já foi encerrada.")
-    form = await request.form()
 
+    cookie_val = request.cookies.get(_cookie_key("socio", token))
+    if cookie_val:
+        existente = db.query(RespondenteSocio).filter(RespondenteSocio.sessao_token == cookie_val).first()
+        if existente and existente.finalizado_em:
+            return RedirectResponse(url=f"/f/socio/{token}", status_code=303)
+
+    form = await request.form()
     todos = ITENS_SOCIO_ESPELHO + ITENS_SOCIO_DIVERGENTE
     for i in todos:
         num = i[0]
@@ -227,9 +285,20 @@ async def submit_form_socio(token: str, request: Request, db: Session = Depends(
         valor=int(form.get("ancora")),
     ))
     db.commit()
-    return RedirectResponse(url="/f/obrigado", status_code=303)
+    db.refresh(respondente)
+
+    response = RedirectResponse(url=f"/f/socio/{token}", status_code=303)
+    response.set_cookie(
+        key=_cookie_key("socio", token),
+        value=respondente.sessao_token,
+        max_age=60 * 60 * 24 * 180,
+        httponly=True,
+        samesite="lax",
+    )
+    return response
 
 
+# Rota antiga (compat) — agora cada tipo tem sua própria tela
 @router.get("/f/obrigado")
-def obrigado(request: Request):
+def obrigado_legacy(request: Request):
     return templates.TemplateResponse("forms/obrigado.html", {"request": request})

@@ -29,6 +29,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     create_engine,
+    event,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker
 
@@ -68,6 +69,8 @@ class Empresa(Base):
     nome: Mapped[str] = mapped_column(String(200), nullable=False)
     data_entrada: Mapped[datetime] = mapped_column(DateTime, default=_now)
     lista_de_areas: Mapped[str] = mapped_column(Text, default="")  # CSV simples
+    tamanho_time_esperado: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    qtd_socios_esperados: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, default=1)
 
     rodadas: Mapped[list["Rodada"]] = relationship(back_populates="empresa", cascade="all, delete-orphan")
 
@@ -164,6 +167,33 @@ class RespostaRetencao(Base):
 def init_db() -> None:
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     Base.metadata.create_all(bind=engine)
+
+
+# Cascade manual: ao deletar um respondente, limpa suas respostas (FK polimórfica)
+def _limpar_respostas_colab(mapper, connection, target):
+    from sqlalchemy import delete
+    connection.execute(delete(Resposta).where(
+        (Resposta.respondente_id == target.id) & (Resposta.tipo_respondente == "colab")
+    ))
+    connection.execute(delete(RespostaAncora).where(
+        (RespostaAncora.respondente_id == target.id) & (RespostaAncora.tipo_respondente == "colab")
+    ))
+    connection.execute(delete(RespostaNPS).where(RespostaNPS.respondente_id == target.id))
+    connection.execute(delete(RespostaRetencao).where(RespostaRetencao.respondente_id == target.id))
+
+
+def _limpar_respostas_socio(mapper, connection, target):
+    from sqlalchemy import delete
+    connection.execute(delete(Resposta).where(
+        (Resposta.respondente_id == target.id) & (Resposta.tipo_respondente == "socio")
+    ))
+    connection.execute(delete(RespostaAncora).where(
+        (RespostaAncora.respondente_id == target.id) & (RespostaAncora.tipo_respondente == "socio")
+    ))
+
+
+event.listen(RespondenteColab, "before_delete", _limpar_respostas_colab)
+event.listen(RespondenteSocio, "before_delete", _limpar_respostas_socio)
 
 
 def get_session():

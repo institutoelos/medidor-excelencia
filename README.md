@@ -17,10 +17,25 @@ Justificativa: Python + FastAPI dá o caminho mais curto entre engine de cálcul
 1. **Instalar dependências:** `make install` (pip + Chromium do Playwright)
 2. **Popular banco com cenário Empresa Teste:** `make seed`
 3. **Subir servidor:** `make dev` (escuta em http://127.0.0.1:8000)
-4. **Abrir painel admin:** http://127.0.0.1:8000/admin
+4. **Abrir painel admin:** http://127.0.0.1:8000/admin — login `admin` / senha `elos` (default; altere via `MEDIDOR_ADMIN_USER` e `MEDIDOR_ADMIN_PASSWORD`)
 5. **Ver relatório:** http://127.0.0.1:8000/relatorio/1 (sem gate) ou http://127.0.0.1:8000/relatorio/2 (gate ativo)
 
 Atalho: `make demo` faz reset + seed + sobe servidor.
+
+## Credenciais admin
+
+O painel exige autenticação HTTP Basic. Padrão de dev:
+
+- Usuário: `admin`
+- Senha: `elos`
+
+Em produção, defina as variáveis de ambiente antes de subir o servidor:
+
+```bash
+export MEDIDOR_ADMIN_USER=seu_usuario
+export MEDIDOR_ADMIN_PASSWORD=uma_senha_forte
+make dev
+```
 
 ## Estrutura do projeto
 

@@ -11,7 +11,10 @@
   <div class="shell">
     <header class="topbar">
       <div class="topbar__inner">
-        <a class="brand" href="/admin">Medidor de <em>Excelência</em></a>
+        <div class="brand-bar">
+          <span class="brand-bar__sigil" aria-hidden="true"></span>
+          <a class="brand" href="{% if request.url.path.startswith('/admin') %}/admin{% else %}#{% endif %}">Medidor de <em>Excelência</em></a>
+        </div>
         <span class="brand-small">ELO Business — Pilar Pessoas</span>
       </div>
     </header>

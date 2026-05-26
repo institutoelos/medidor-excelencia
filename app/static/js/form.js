@@ -1,10 +1,15 @@
-// Persistência de progresso via localStorage + UI dos botões Likert/NPS
+// Persistência + UX do formulário: progresso sticky, estimativa de tempo, validação inline.
 (function () {
   const form = document.getElementById("form-medidor");
   if (!form) return;
   const storageKey = form.dataset.storageKey;
+  const startedAtKey = storageKey + ":started_at";
+
   const progressBar = document.querySelector(".progress-bar__fill");
+  const progressLabel = document.getElementById("progress-label");
+  const timeLabel = document.getElementById("time-label");
   const savedPill = document.getElementById("saved-pill");
+  const pilarLabel = document.getElementById("pilar-label");
 
   // ── restaura
   try {
@@ -14,63 +19,119 @@
       inputs.forEach((el) => {
         if (el.type === "radio") {
           if (el.value === String(value)) el.checked = true;
-        } else if (el.type === "checkbox") {
-          el.checked = !!value;
         } else {
           el.value = value;
         }
       });
     });
-  } catch (e) {
-    console.warn("falha ao restaurar progresso", e);
+  } catch (e) { /* */ }
+
+  if (!localStorage.getItem(startedAtKey)) {
+    localStorage.setItem(startedAtKey, String(Date.now()));
   }
   updateUI();
 
-  // ── salva a cada mudança
   form.addEventListener("change", () => {
     const data = new FormData(form);
     const out = {};
     data.forEach((v, k) => { out[k] = v; });
     localStorage.setItem(storageKey, JSON.stringify(out));
     if (savedPill) {
-      savedPill.textContent = "Salvo automaticamente • " + new Date().toLocaleTimeString("pt-BR");
+      savedPill.textContent = "Salvo automaticamente · " + new Date().toLocaleTimeString("pt-BR", {hour: "2-digit", minute: "2-digit"});
     }
     updateUI();
   });
 
   function updateUI() {
-    // Marca .checked nos likert/nps/opt-list/radio para feedback visual
+    // Marca checked nos botões Likert/NPS/retencao
     form.querySelectorAll("input[type=radio]").forEach((el) => {
       const wrap = el.closest("label");
       if (!wrap) return;
-      if (el.checked) wrap.classList.add("checked");
-      else wrap.classList.remove("checked");
+      if (el.checked) wrap.classList.add("checked"); else wrap.classList.remove("checked");
     });
-    // Progresso
-    if (progressBar) {
-      const radios = form.querySelectorAll("input[type=radio]");
-      const groups = {};
-      radios.forEach((r) => { groups[r.name] = groups[r.name] || false; if (r.checked) groups[r.name] = true; });
-      const total = Object.keys(groups).length;
-      const done = Object.values(groups).filter(Boolean).length;
-      const otherRequired = form.querySelectorAll("[required]:not([type=radio])");
-      let otherDone = 0;
-      otherRequired.forEach((el) => { if (el.value) otherDone += 1; });
-      const allTotal = total + otherRequired.length;
-      const allDone = done + otherDone;
-      const pct = allTotal === 0 ? 0 : Math.round((allDone / allTotal) * 100);
-      progressBar.style.width = pct + "%";
-      const pctLabel = document.getElementById("progress-label");
-      if (pctLabel) pctLabel.textContent = pct + "% preenchido (" + allDone + " de " + allTotal + ")";
+
+    // Conta grupos respondidos
+    const radios = form.querySelectorAll("input[type=radio]");
+    const groups = {};
+    radios.forEach((r) => {
+      if (!(r.name in groups)) groups[r.name] = false;
+      if (r.checked) groups[r.name] = true;
+    });
+    const totalGroups = Object.keys(groups).length;
+    const doneGroups = Object.values(groups).filter(Boolean).length;
+
+    const otherRequired = form.querySelectorAll("[required]:not([type=radio]):not([type=checkbox])");
+    let otherDone = 0;
+    otherRequired.forEach((el) => { if (el.value) otherDone += 1; });
+
+    const totalAll = totalGroups + otherRequired.length;
+    const doneAll = doneGroups + otherDone;
+    const pct = totalAll === 0 ? 0 : Math.round((doneAll / totalAll) * 100);
+
+    if (progressBar) progressBar.style.width = pct + "%";
+    if (progressLabel) progressLabel.textContent = pct + "% (" + doneAll + " de " + totalAll + ")";
+
+    // Estimativa de tempo
+    if (timeLabel) {
+      const started = parseInt(localStorage.getItem(startedAtKey) || Date.now(), 10);
+      const elapsed = (Date.now() - started) / 1000;
+      if (doneAll === 0) {
+        timeLabel.textContent = "Estimativa: ~12 min (média histórica)";
+      } else {
+        const perItem = elapsed / doneAll;
+        const remain = (totalAll - doneAll) * perItem;
+        const min = Math.max(1, Math.round(remain / 60));
+        timeLabel.textContent = "Faltam ~" + min + " min nesse ritmo";
+      }
+    }
+
+    // Detecta pilar atual (último item focado/respondido)
+    if (pilarLabel) {
+      const sections = form.querySelectorAll("[data-pilar]");
+      let atual = null;
+      sections.forEach((s) => {
+        const rect = s.getBoundingClientRect();
+        if (rect.top < 200) atual = s.dataset.pilar;
+      });
+      if (atual) pilarLabel.textContent = atual;
     }
   }
 
-  // ── ao submeter com sucesso, limpa o storage
+  // ── pilar visível ao rolar
+  window.addEventListener("scroll", () => {
+    if (pilarLabel) {
+      const sections = form.querySelectorAll("[data-pilar]");
+      let atual = "";
+      sections.forEach((s) => {
+        const rect = s.getBoundingClientRect();
+        if (rect.top < 200) atual = s.dataset.pilar;
+      });
+      if (atual) pilarLabel.textContent = atual;
+    }
+  }, {passive: true});
+
+  // ── valida retencao=outro exigindo descrição
+  const retencaoOutro = form.querySelector("input[name=retencao][value=outro]");
+  const retencaoTexto = form.querySelector("#retencao_outro");
+  if (retencaoOutro && retencaoTexto) {
+    function toggleOutro() {
+      if (retencaoOutro.checked) {
+        retencaoTexto.setAttribute("required", "required");
+        retencaoTexto.placeholder = "Descreva o motivo (obrigatório se marcou 'Outro')";
+      } else {
+        retencaoTexto.removeAttribute("required");
+        retencaoTexto.placeholder = "(opcional)";
+      }
+    }
+    form.querySelectorAll("input[name=retencao]").forEach(r => r.addEventListener("change", toggleOutro));
+    toggleOutro();
+  }
+
+  // ── submit
   form.addEventListener("submit", (ev) => {
-    // Valida obrigatoriedade visual
     const radios = form.querySelectorAll("input[type=radio]");
     const groups = {};
-    radios.forEach((r) => { groups[r.name] = groups[r.name] || false; if (r.checked) groups[r.name] = true; });
+    radios.forEach((r) => { if (!(r.name in groups)) groups[r.name] = false; if (r.checked) groups[r.name] = true; });
     const missing = Object.entries(groups).filter(([, v]) => !v).map(([k]) => k);
     if (missing.length > 0) {
       ev.preventDefault();
@@ -86,18 +147,18 @@
       alert("Faltam " + missing.length + " item(ns) para responder antes de enviar.");
       return;
     }
-    // Verifica outros obrigatórios
-    const otherReq = form.querySelectorAll("[required]:not([type=radio])");
+    const otherReq = form.querySelectorAll("[required]:not([type=radio]):not([type=checkbox])");
     for (const el of otherReq) {
       if (!el.value) {
         ev.preventDefault();
         el.scrollIntoView({ behavior: "smooth", block: "center" });
         el.focus();
-        alert("Por favor preencha o campo obrigatório.");
+        alert("Por favor preencha o campo obrigatório: " + (el.previousElementSibling ? el.previousElementSibling.textContent : el.placeholder));
         return;
       }
     }
-    // OK, vai submeter — limpa storage no callback de sucesso (servidor redireciona)
+    // OK
     localStorage.removeItem(storageKey);
+    localStorage.removeItem(startedAtKey);
   });
 })();

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Resposta registrada{% endblock %}
+{% block content %}
+<div class="thanks">
+  <h1 class="serif">Obrigado.</h1>
+  <p class="lead">Sua resposta foi registrada de forma confidencial. O conjunto agregado vai virar o relatório consolidado da empresa, entregue na próxima sessão de mentoria.</p>
+
+  <div class="recibo">
+    <p class="eyebrow">Recibo</p>
+    <dl>
+      <dt>Empresa</dt><dd><strong>{{ empresa.nome }}</strong></dd>
+      <dt>Rodada</dt><dd>{{ rodada.tipo }}</dd>
+      <dt>Registrada em</dt><dd class="num">{{ finalizado_em.strftime("%d/%m/%Y às %H:%M") }}</dd>
+      <dt>Itens respondidos</dt><dd class="num">58 Likert + âncora + NPS + retenção + 3 demográficos</dd>
+    </dl>
+  </div>
+
+  <div class="next-step">
+    Se você clicar no link de novo, esta página vai aparecer no lugar do formulário — sua resposta já está protegida contra duplicatas. Se precisar corrigir algo, fale com a liderança do programa na sua empresa.
+  </div>
+</div>
+{% endblock %}

@@ -27,10 +27,11 @@ from app.content.items import (
     ITENS_COLABORADOR,
     ITENS_SOCIO_DIVERGENTE,
     ITENS_SOCIO_ESPELHO,
-    PILARES,
     PILAR_CULTURA,
     PILAR_EDUCACAO,
     PILAR_FEEDBACK,
+    PILAR_LABEL,
+    PILARES,
     faixa_do_medidor,
 )
 from app.models.db import (
@@ -44,6 +45,72 @@ from app.models.db import (
 )
 
 MINIMO_PARA_REPORTAR_CORTE = 5  # §17.2
+
+
+def calcular_parciais_rodada(db: Session, rodada_id: int) -> dict:
+    """Painel parcial enquanto a rodada está aberta: contagem, ritmo, médias por pilar.
+
+    Não substitui o relatório fechado — serve só pro mentor acompanhar a coleta.
+    """
+    from datetime import datetime, timedelta
+    rodada = db.query(Rodada).filter(Rodada.id == rodada_id).first()
+    if rodada is None:
+        return {}
+
+    respondentes_colab = (
+        db.query(RespondenteColab)
+        .filter(RespondenteColab.rodada_id == rodada_id)
+        .all()
+    )
+    respondentes_socio = (
+        db.query(RespondenteSocio)
+        .filter(RespondenteSocio.rodada_id == rodada_id)
+        .all()
+    )
+    n_colab = len(respondentes_colab)
+    n_socio = len(respondentes_socio)
+
+    esperado_colab = rodada.empresa.tamanho_time_esperado
+    esperado_socio = rodada.empresa.qtd_socios_esperados or 1
+    pct_colab = (round(n_colab / esperado_colab * 100, 1) if esperado_colab else None)
+    pct_socio = round(n_socio / esperado_socio * 100, 1) if esperado_socio else None
+
+    # Ritmo nas últimas 24h
+    agora = datetime.utcnow()
+    ult_24h = agora - timedelta(hours=24)
+    ult_24h_colab = sum(1 for r in respondentes_colab if r.criado_em and r.criado_em >= ult_24h)
+    ult_24h_socio = sum(1 for r in respondentes_socio if r.criado_em and r.criado_em >= ult_24h)
+
+    # Médias parciais (Top 2 Box por pilar, colab apenas)
+    respostas_colab_map = _respostas_likert_por_item(db, rodada_id, "colab")
+    pilares_colab_parcial = calcular_pilares_colab(respostas_colab_map)
+    notas_parciais = {p: pilares_colab_parcial[p]["nota_pilar"] for p in PILARES}
+    medidor_parcial = calcular_medidor(notas_parciais)
+
+    return {
+        "rodada_id": rodada_id,
+        "rodada_tipo": rodada.tipo,
+        "rodada_status": rodada.status,
+        "rodada_inicio": rodada.data_inicio,
+        "empresa_nome": rodada.empresa.nome,
+        "contagens": {
+            "colab": n_colab,
+            "colab_esperado": esperado_colab,
+            "colab_pct": pct_colab,
+            "socio": n_socio,
+            "socio_esperado": esperado_socio,
+            "socio_pct": pct_socio,
+            "ult_24h_colab": ult_24h_colab,
+            "ult_24h_socio": ult_24h_socio,
+        },
+        "parciais": {
+            "medidor": medidor_parcial,
+            "pilares": notas_parciais,
+            "faixa": faixa_do_medidor(medidor_parcial) if medidor_parcial is not None else None,
+        } if n_colab > 0 else None,
+        "minimo_para_parciais_relevantes": 5,
+        "parciais_sao_relevantes": n_colab >= 5,
+    }
 
 
 # ─── Funções puras (cálculo) ────────────────────────────────────────────────

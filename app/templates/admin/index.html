@@ -5,8 +5,16 @@
 <section class="form-hero">
   <p class="eyebrow">Painel ELO Business</p>
   <h1 class="serif">Empresas e rodadas</h1>
-  <p>Crie uma empresa, abra uma rodada de diagnóstico (entrada / 6m / 12m / 18m / 24m) e gere os dois links únicos de formulário. Acompanhe a contagem de respostas e feche a rodada para gerar o relatório consolidado.</p>
+  <p>Acompanhe diagnósticos em andamento, abra rodadas, gere relatórios.</p>
 </section>
+
+<div class="card" style="margin-bottom:16px;">
+  <form method="get" action="/admin" style="display:flex; gap:12px;">
+    <input class="textinput" name="q" value="{{ q }}" placeholder="Buscar empresa pelo nome…" style="flex:1;">
+    <button class="btn btn--ghost" type="submit">Buscar</button>
+    {% if q %}<a class="btn btn--ghost" href="/admin">Limpar</a>{% endif %}
+  </form>
+</div>
 
 <div class="card" style="margin-bottom:24px;">
   <h2 class="serif">Nova empresa</h2>
@@ -14,6 +22,10 @@
     <div style="display:grid; grid-template-columns: 2fr 3fr; gap:12px; margin-bottom:12px;">
       <input class="textinput" name="nome" placeholder="Nome da empresa" required>
       <input class="textinput" name="areas" placeholder="Áreas (separadas por vírgula). Ex.: comercial, financeiro, operações">
+    </div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+      <input class="textinput" type="number" min="1" name="tamanho_time_esperado" placeholder="Tamanho esperado do time (colab)">
+      <input class="textinput" type="number" min="1" name="qtd_socios_esperados" placeholder="Qtd. de sócios esperados (default 1)" value="1">
     </div>
     <div class="actions" style="margin:0;">
       <button class="btn btn--copper" type="submit">Cadastrar empresa</button>
@@ -23,62 +35,95 @@
 
 {% for empresa in empresas %}
   <div class="card" style="margin-bottom:16px;">
-    <div style="display:flex; justify-content: space-between; align-items: flex-start; gap:16px;">
-      <div>
-        <h2 class="serif" style="margin-bottom: 4px;">{{ empresa.nome }}</h2>
-        <p class="eyebrow" style="margin:0;">Entrada em {{ empresa.data_entrada.strftime("%d/%m/%Y") }}{% if empresa.areas_lista() %} · {{ empresa.areas_lista() | length }} áreas{% endif %}</p>
-      </div>
-      <form method="post" action="/admin/empresas/{{ empresa.id }}/rodadas">
-        <select class="select" name="tipo" style="width:auto; display:inline-block;">
-          {% for t in tipos_rodada %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
-        </select>
-        <button class="btn" type="submit">Abrir rodada</button>
-      </form>
-    </div>
+    <details {% if loop.first %}open{% endif %}>
+      <summary style="cursor:pointer; list-style: none; display:flex; justify-content: space-between; align-items: flex-start; gap:16px;">
+        <div>
+          <h2 class="serif" style="margin-bottom: 4px;">{{ empresa.nome }}</h2>
+          <p class="eyebrow" style="margin:0;">
+            Entrada em {{ empresa.data_entrada.strftime("%d/%m/%Y") }}
+            {% if empresa.tamanho_time_esperado %} · time esperado: <strong>{{ empresa.tamanho_time_esperado }}</strong>{% endif %}
+            {% if empresa.qtd_socios_esperados %} · {{ empresa.qtd_socios_esperados }} sócio(s){% endif %}
+            {% if empresa.areas_lista() %} · {{ empresa.areas_lista() | length }} áreas{% endif %}
+          </p>
+        </div>
+        <form method="post" action="/admin/empresas/{{ empresa.id }}/rodadas" onsubmit="return confirm('Abrir nova rodada para {{ empresa.nome }}?')">
+          <select class="select" name="tipo" style="width:auto; display:inline-block;">
+            {% for t in tipos_rodada %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+          </select>
+          <button class="btn" type="submit">Abrir rodada</button>
+        </form>
+      </summary>
 
-    {% if empresa.rodadas %}
-      <table class="std" style="margin-top:16px;">
-        <thead>
-          <tr>
-            <th>Rodada</th><th>Início</th><th>Status</th><th>Respostas</th><th>Links</th><th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for r in empresa.rodadas %}
-          <tr>
-            <td><strong>{{ r.tipo }}</strong></td>
-            <td>{{ r.data_inicio.strftime("%d/%m/%Y") }}</td>
-            <td><span class="status status--{{ r.status }}">{{ r.status }}</span></td>
-            <td class="num">{{ contagens[r.id].colaboradores }} colab / {{ contagens[r.id].socios }} sócios</td>
-            <td>
-              <div style="display:flex; gap:6px; flex-wrap: wrap;">
-                <a class="link-pill" href="/f/colab/{{ r.token_colab }}" target="_blank">link colab</a>
-                <a class="link-pill" href="/f/socio/{{ r.token_socio }}" target="_blank">link sócio</a>
-              </div>
-            </td>
-            <td>
-              <div style="display:flex; gap:6px; flex-wrap: wrap;">
-                {% if r.status == "aberta" %}
-                  <form method="post" action="/admin/rodadas/{{ r.id }}/fechar" style="display:inline;"><button class="btn btn--ghost" type="submit" onclick="return confirm('Fechar a rodada? Novas respostas serão bloqueadas.')">Fechar</button></form>
+      {# Form de edição básica #}
+      <form method="post" action="/admin/empresas/{{ empresa.id }}/editar" style="margin-top:14px; padding-top:14px; border-top: 0.5px solid var(--hairline);">
+        <p class="eyebrow" style="margin-top:0;">Editar empresa</p>
+        <div style="display:grid; grid-template-columns: 2fr 2fr 1fr 1fr; gap:8px; margin-bottom:10px;">
+          <input class="textinput" name="nome" value="{{ empresa.nome }}" required>
+          <input class="textinput" name="areas" value="{{ empresa.lista_de_areas or '' }}" placeholder="áreas separadas por vírgula">
+          <input class="textinput" type="number" min="1" name="tamanho_time_esperado" value="{{ empresa.tamanho_time_esperado or '' }}" placeholder="esperado">
+          <input class="textinput" type="number" min="1" name="qtd_socios_esperados" value="{{ empresa.qtd_socios_esperados or 1 }}">
+        </div>
+        <button class="btn btn--ghost" type="submit" style="font-size:12px; padding:8px 16px;">Salvar alterações</button>
+      </form>
+
+      {% if empresa.rodadas %}
+        <table class="std" style="margin-top:16px;">
+          <thead>
+            <tr>
+              <th>Rodada</th><th>Início</th><th>Status</th><th>Progresso</th><th>Parcial</th><th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in empresa.rodadas %}
+            {% set p = parciais.get(r.id, {}) %}
+            {% set c = p.get("contagens", {}) %}
+            <tr>
+              <td><strong>{{ r.tipo }}</strong></td>
+              <td>{{ r.data_inicio.strftime("%d/%m/%Y") }}{% if r.data_fim %} → {{ r.data_fim.strftime("%d/%m/%Y") }}{% endif %}</td>
+              <td><span class="status status--{{ r.status }}">{{ r.status }}</span></td>
+              <td class="num">
+                Colab: <strong>{{ c.colab or 0 }}{% if c.colab_esperado %} / {{ c.colab_esperado }}{% endif %}</strong>
+                {% if c.colab_pct is not none %} ({{ c.colab_pct }}%){% endif %}<br>
+                Sócios: <strong>{{ c.socio or 0 }}{% if c.socio_esperado %} / {{ c.socio_esperado }}{% endif %}</strong>
+                {% if c.ult_24h_colab or c.ult_24h_socio %}<br><span class="muted" style="font-size:11px;">últimas 24h: +{{ c.ult_24h_colab + c.ult_24h_socio }}</span>{% endif %}
+              </td>
+              <td>
+                {% if p.parciais_sao_relevantes and p.parciais %}
+                  Medidor parcial: <strong style="color: {{ p.parciais.faixa.cor if p.parciais.faixa else 'inherit' }};">{{ p.parciais.medidor }}</strong>
+                {% elif (c.colab or 0) > 0 %}
+                  <span class="muted">parcial irrelevante ({{ c.colab }} &lt; 5)</span>
                 {% else %}
-                  <form method="post" action="/admin/rodadas/{{ r.id }}/reabrir" style="display:inline;"><button class="btn btn--ghost" type="submit">Reabrir</button></form>
+                  <span class="muted">—</span>
                 {% endif %}
-                <a class="btn btn--copper" href="/relatorio/{{ r.id }}" target="_blank">Gerar Relatório</a>
-                <a class="btn btn--ghost" href="/relatorio/{{ r.id }}/pdf">PDF</a>
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    {% else %}
-      <p class="section-sub" style="margin-top:16px;">Ainda sem rodadas. Use o seletor acima para abrir a primeira.</p>
-    {% endif %}
+              </td>
+              <td>
+                <div style="display:flex; gap:6px; flex-wrap: wrap;">
+                  <a class="btn btn--ghost" href="/admin/rodadas/{{ r.id }}" style="font-size:12px; padding:6px 12px;">Detalhes</a>
+                  <a class="btn btn--copper" href="/relatorio/{{ r.id }}" target="_blank" style="font-size:12px; padding:6px 12px;">Relatório</a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="section-sub" style="margin-top:16px;">Ainda sem rodadas para esta empresa.</p>
+      {% endif %}
+    </details>
   </div>
 {% endfor %}
 
 {% if not empresas %}
-  <div class="flash flash--info">Nenhuma empresa cadastrada ainda. Use o formulário acima para começar.</div>
+  {% if q %}
+    <div class="flash flash--info">Nenhuma empresa encontrada para "{{ q }}".</div>
+  {% else %}
+    <div class="flash flash--info">Nenhuma empresa cadastrada. Use o formulário acima para começar.</div>
+  {% endif %}
 {% endif %}
+
+<style>
+  details summary::-webkit-details-marker { display: none; }
+  details > summary { cursor: pointer; }
+</style>
 
 {% endblock %}

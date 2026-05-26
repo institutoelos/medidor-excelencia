@@ -5,24 +5,40 @@
 <section class="form-hero">
   <p class="eyebrow">Diagnóstico do Pilar Pessoas — Versão Sócio / Empresário</p>
   <h1 class="serif">{{ empresa.nome }}</h1>
-  <p>Suas respostas geram o Relatório de Gap quando comparadas com as do time. Os primeiros 41 itens descrevem o que você <strong>observa</strong> no time (não o que pretende). Os 17 últimos perguntam sobre o sistema que você desenhou.</p>
+  <p>Suas respostas geram o <strong>Relatório de Gap</strong> quando comparadas com as do time. Os primeiros 41 itens descrevem o que você <strong>observa acontecendo</strong> com o time — não o que você pretende ou acredita. Os 17 últimos perguntam sobre o sistema que você desenhou.</p>
 </section>
 
-<div class="progress-bar"><div class="progress-bar__fill"></div></div>
-<div style="display:flex; justify-content: space-between; margin-bottom: 24px;">
-  <span id="progress-label" class="eyebrow">0% preenchido</span>
-  <span id="saved-pill" class="saved-pill">Aguardando primeira resposta…</span>
+<div class="confid-strip">
+  <strong>Importante:</strong> aqui não há resposta certa ou errada. Quanto mais honesto você for agora — especialmente nos 17 últimos itens —, mais útil será seu Plano de Ação na mentoria.
+</div>
+
+<div class="progress-sticky">
+  <div class="progress-bar"><div class="progress-bar__fill"></div></div>
+  <div class="info">
+    <span><strong id="progress-label">0%</strong></span>
+    <span id="time-label">Estimativa: ~12 min</span>
+  </div>
+  <div class="info">
+    <span class="eyebrow" id="pilar-label">Início</span>
+    <span class="saved-pill" id="saved-pill">aguardando primeira resposta</span>
+  </div>
 </div>
 
 <form id="form-medidor" method="post" action="/f/socio/{{ token }}/enviar" data-storage-key="medidor-socio-{{ token }}">
 
   {% for pilar_codigo, pilar_label, secoes in agrupado %}
-    <h2 class="section-title serif">{{ pilar_label }}</h2>
+    <h2 class="section-title serif" data-pilar="{{ pilar_label }} (observação)">{{ pilar_label }}</h2>
     {% for sec_label, itens in secoes %}
-      <p class="eyebrow" style="margin-top:24px;">{{ sec_label }}</p>
+      {% if "perguntas para o sócio" in sec_label %}
+        <div class="divergente-strip">
+          <h3>Agora sobre você, o sistema que você desenhou</h3>
+          <p>Os próximos itens são perguntas para o sócio, não observação do time. Não tem certo nem errado. Se a resposta honesta for "não sei dizer", marque baixo — isso ajuda a calibrar seu Plano de Ação.</p>
+        </div>
+      {% endif %}
+      <p class="eyebrow" style="margin-top:24px;">{{ sec_label }} · {{ itens | length }} itens</p>
       {% for num, texto in itens %}
         <div class="item">
-          <div class="item__num">Item {{ num }}</div>
+          <div class="item__num">Item {{ num }} de 58</div>
           <div class="item__texto">{{ texto }}</div>
           <div class="likert">
             {% for v, rotulo in likert %}
@@ -38,7 +54,7 @@
     {% endfor %}
   {% endfor %}
 
-  <h2 class="section-title serif">Pergunta síntese</h2>
+  <h2 class="section-title serif" data-pilar="Pergunta síntese">Pergunta síntese</h2>
   <div class="item">
     <div class="item__texto">{{ ancora_texto }}</div>
     <div class="likert">

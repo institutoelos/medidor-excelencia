@@ -42,3 +42,18 @@ A especificação diz "versão Sócios" (plural). Implementação trata múltipl
 
 ## 13. PDF — versão do Playwright
 O ambiente já tinha Chromium 1194 pré-instalado em `/opt/pw-browsers`. Fixei `playwright==1.56.0` no `requirements.txt` para casar com essa versão e evitar download de browser. A variável `PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers` é exportada no `Makefile`.
+
+## 14. Autenticação admin
+HTTP Basic via FastAPI. Usuário/senha em env vars (`MEDIDOR_ADMIN_USER`/`MEDIDOR_ADMIN_PASSWORD`). Default `admin/elos` para desenvolvimento. Realm em ASCII puro porque headers HTTP usam latin-1. Cookies de respondente são `HttpOnly` + `samesite=lax`.
+
+## 15. Dedup de respondente via cookie
+Cookie `med_{tipo}_{token}` armazena o `sessao_token` do respondente. Se cookie está presente E o respondente está finalizado, GET no formulário mostra a tela de "Obrigado" no lugar do form, e POST redireciona sem criar duplicata. Cookie dura 180 dias. Limpar o navegador / abrir incógnito desbloqueia (cliente B sem cookie vê o form normalmente).
+
+## 16. Cascade polimórfico das respostas
+A tabela `respostas` (e `respostas_ancora`, `respostas_nps`, `respostas_retencao`) não tem FK real para `respondentes_colab`/`respondentes_socio` (FK polimórfica não é suportada nativamente no SQLAlchemy 2.0 sem complicação). Usei `event.listen(..., "before_delete", ...)` para que ao deletar um respondente, suas respostas sejam apagadas automaticamente. Teste cobre o caso completo (deletar empresa → cascateia até as respostas).
+
+## 17. Painel parcial durante coleta
+Endpoint JSON `/admin/rodadas/{id}/parciais.json` retorna contagem + Medidor parcial + pilares. UI faz polling de 10s. Métricas parciais só aparecem com 5+ respondentes (mesma regra de anonimato do relatório oficial).
+
+## 18. Tamanho esperado do time
+Adicionei `tamanho_time_esperado` e `qtd_socios_esperados` em `empresas`. Campos opcionais — quando preenchidos, o painel mostra progresso "12 de 18 esperados (66.7%)". Migração feita via `ALTER TABLE` direto (SQLite, sem Alembic).
