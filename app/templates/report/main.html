@@ -47,9 +47,26 @@
 </section>
 
 {# ────────────────────────────────────────────────────────────────
-   PÁGINA 2 — Resumo executivo
+   PÁGINA 2 — Resumo executivo (com sumário clicável no PDF)
    ──────────────────────────────────────────────────────────────── #}
-<section class="page">
+<nav class="toc-nav" aria-label="Sumário do relatório">
+  <p class="eyebrow">Sumário</p>
+  <ol>
+    <li><a href="#resumo">Resumo executivo</a></li>
+    <li><a href="#painel">Painel geral</a></li>
+    <li><a href="#pilar-cultura">Pilar Cultura, Tribo e Engajamento</a></li>
+    <li><a href="#pilar-educacao">Pilar Educação</a></li>
+    <li><a href="#pilar-feedback">Pilar Feedback e Mudança de Comportamento</a></li>
+    <li><a href="#retencao">Vetor de retenção</a></li>
+    <li><a href="#cortes">Cortes demográficos</a></li>
+    <li><a href="#gap">Relatório de Gap (Sócio vs Colaborador)</a></li>
+    <li><a href="#consciencia">Consciência sistêmica do empresário</a></li>
+    <li><a href="#plano">Plano de ação prioritário</a></li>
+    <li><a href="#linha-base">Linha de base para reaferição</a></li>
+  </ol>
+</nav>
+
+<section class="page" id="resumo">
   <div class="section-header">
     <h1 class="serif">Resumo executivo</h1>
     <span class="eyebrow">02 · Resumo</span>
@@ -135,7 +152,7 @@
 {# ────────────────────────────────────────────────────────────────
    PÁGINA 3 — Painel Geral
    ──────────────────────────────────────────────────────────────── #}
-<section class="page">
+<section class="page" id="painel">
   <div class="section-header">
     <h1 class="serif">Painel geral</h1>
     <span class="eyebrow">03 · Painel</span>
@@ -201,7 +218,7 @@
 {% for p in PILARES %}
 {% set pdata = d.pilares_colab[p] %}
 {% set nota = d.notas_pilares_colab[p] %}
-<section class="page">
+<section class="page" id="pilar-{{ p }}">
   <div class="section-header">
     <h1 class="serif">{{ PILAR_LABEL[p] }}</h1>
     <span class="eyebrow">0{{ pagina.n }} · Pilar</span>
@@ -255,7 +272,7 @@
 {# ────────────────────────────────────────────────────────────────
    PÁGINA 7 — Pergunta de retenção
    ──────────────────────────────────────────────────────────────── #}
-<section class="page">
+<section class="page" id="retencao">
   <div class="section-header">
     <h1 class="serif">Vetor de retenção</h1>
     <span class="eyebrow">07 · Retenção</span>
@@ -298,7 +315,7 @@
 {# ────────────────────────────────────────────────────────────────
    PÁGINA 8 — Cortes demográficos
    ──────────────────────────────────────────────────────────────── #}
-<section class="page">
+<section class="page" id="cortes">
   <div class="section-header">
     <h1 class="serif">Cortes demográficos</h1>
     <span class="eyebrow">08 · Cortes</span>
@@ -347,7 +364,7 @@
 {# ────────────────────────────────────────────────────────────────
    PÁGINA 9 — Relatório de Gap (Sócio vs Colaborador)
    ──────────────────────────────────────────────────────────────── #}
-<section class="page">
+<section class="page" id="gap">
   <div class="section-header">
     <h1 class="serif">Relatório de Gap</h1>
     <span class="eyebrow">09 · Sócio vs Colaborador</span>
@@ -359,33 +376,41 @@
   {% for p in PILARES %}
     {% set cons = d.gaps_consolidados[p] %}
     <h3 class="serif gap-8" style="font-size: 20px;">{{ PILAR_LABEL[p] }}</h3>
-    <div style="display:flex; gap: 8mm; margin-bottom: 5mm; font-size: 11px;">
-      <span class="badge badge--red">{{ cons.n_cegueira }} cegueira do dono</span>
-      <span class="badge badge--green">{{ cons.n_alinhamento }} alinhamento</span>
-      <span class="badge badge--amber">{{ cons.n_subestimacao }} subestimação</span>
-      {% if cons.n_sem_dados %}<span class="badge">{{ cons.n_sem_dados }} sem dados</span>{% endif %}
-    </div>
-
-    {% for g in cons.itens %}
-      <div class="gap-item">
-        <div class="gap-item__label"><strong>{{ g.num_socio }}.</strong> {{ g.texto_colab }}</div>
-        <div class="gap-item__bars">
-          <div class="gap-item__row">
-            <span>Sócio</span>
-            <div class="bar"><div style="width:{{ g.top2_socio or 0 }}%; background: var(--purple);"></div></div>
-            <span class="v">{{ fmt(g.top2_socio, "%") }}</span>
-          </div>
-          <div class="gap-item__row">
-            <span>Colab</span>
-            <div class="bar"><div style="width:{{ g.top2_colab or 0 }}%; background: var(--teal);"></div></div>
-            <span class="v">{{ fmt(g.top2_colab, "%") }}</span>
-          </div>
-        </div>
-        <div class="gap-item__cat cat-{{ g.categoria }}">
-          {% if g.gap is none %}—{% else %}{{ '%+.1f' | format(g.gap) }} p.p.{% endif %}
-        </div>
+    {% set total_itens_pilar = cons.itens | length %}
+    {% if total_itens_pilar == 0 %}
+      <div class="flash flash--info" style="margin: 4mm 0; padding: 5mm; font-size: 12px; background: var(--paper-2); border-left: 3px solid var(--copper); border-radius: 0 6px 6px 0;">
+        <strong>Por desenho da metodologia, o pilar {{ PILAR_LABEL[p] }} não tem itens espelho.</strong>
+        A vivência do time neste pilar foi medida pelos 14 itens da versão Colaborador (página 6), e a consciência do sócio sobre o sistema é medida pelos 5 itens divergentes (página 10). Não há, portanto, gap por item espelho para reportar aqui.
       </div>
-    {% endfor %}
+    {% else %}
+      <div style="display:flex; gap: 8mm; margin-bottom: 5mm; font-size: 11px;">
+        <span class="badge badge--red">{{ cons.n_cegueira }} cegueira do dono</span>
+        <span class="badge badge--green">{{ cons.n_alinhamento }} alinhamento</span>
+        <span class="badge badge--amber">{{ cons.n_subestimacao }} subestimação</span>
+        {% if cons.n_sem_dados %}<span class="badge">{{ cons.n_sem_dados }} sem dados</span>{% endif %}
+      </div>
+
+      {% for g in cons.itens %}
+        <div class="gap-item">
+          <div class="gap-item__label"><strong>{{ g.num_socio }}.</strong> {{ g.texto_colab }}</div>
+          <div class="gap-item__bars">
+            <div class="gap-item__row">
+              <span>Sócio</span>
+              <div class="bar"><div style="width:{{ g.top2_socio or 0 }}%; background: var(--purple);"></div></div>
+              <span class="v">{{ fmt(g.top2_socio, "%") }}</span>
+            </div>
+            <div class="gap-item__row">
+              <span>Colab</span>
+              <div class="bar"><div style="width:{{ g.top2_colab or 0 }}%; background: var(--teal);"></div></div>
+              <span class="v">{{ fmt(g.top2_colab, "%") }}</span>
+            </div>
+          </div>
+          <div class="gap-item__cat cat-{{ g.categoria }}">
+            {% if g.gap is none %}—{% else %}{{ '%+.1f' | format(g.gap) }} p.p.{% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    {% endif %}
   {% endfor %}
 
   <div class="page-foot"><span>{{ d.empresa.nome }} · Gap Sócio vs Colab</span><span>09</span></div>
@@ -394,7 +419,7 @@
 {# ────────────────────────────────────────────────────────────────
    PÁGINA 10 — Consciência Sistêmica
    ──────────────────────────────────────────────────────────────── #}
-<section class="page">
+<section class="page" id="consciencia">
   <div class="section-header">
     <h1 class="serif">Consciência sistêmica do empresário</h1>
     <span class="eyebrow">10 · Divergentes</span>
@@ -440,7 +465,7 @@
 {# ────────────────────────────────────────────────────────────────
    PÁGINA 11 — Plano de ação prioritário
    ──────────────────────────────────────────────────────────────── #}
-<section class="page">
+<section class="page" id="plano">
   <div class="section-header">
     <h1 class="serif">Plano de ação prioritário</h1>
     <span class="eyebrow">11 · Próximos passos</span>
@@ -490,7 +515,7 @@
 {# ────────────────────────────────────────────────────────────────
    PÁGINA 12 — Linha de base para reaferição
    ──────────────────────────────────────────────────────────────── #}
-<section class="page">
+<section class="page" id="linha-base">
   <div class="section-header">
     <h1 class="serif">Linha de base para reaferição</h1>
     <span class="eyebrow">12 · Próxima rodada</span>
@@ -512,6 +537,50 @@
       <tr><td>Total de respondentes</td><td class="num">{{ d.contagens.colaboradores + d.contagens.socios }}</td><td>{{ d.contagens.colaboradores }} colab · {{ d.contagens.socios }} sócios</td></tr>
     </tbody>
   </table>
+
+  {% if d.comparacao %}
+    <h3 class="serif gap-12" style="font-size: 22px;">Evolução vs. rodada {{ d.comparacao.rodada_anterior.tipo }} ({{ d.comparacao.rodada_anterior.data.strftime("%d/%m/%Y") }})</h3>
+    <table class="cortes gap-8">
+      <thead><tr><th>Métrica</th><th>Anterior</th><th>Atual</th><th>Δ</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Medidor</td>
+          <td class="num">{{ fmt(d.comparacao.anterior.medidor) }}</td>
+          <td class="num">{{ fmt(d.comparacao.atual.medidor) }}</td>
+          <td class="num" style="color: {% if d.comparacao.diffs.medidor is none %}var(--ink-dim){% elif d.comparacao.diffs.medidor >= 0 %}var(--green){% else %}var(--red){% endif %};">
+            {% if d.comparacao.diffs.medidor is not none %}{{ '%+.1f' | format(d.comparacao.diffs.medidor) }}{% else %}—{% endif %}
+          </td>
+        </tr>
+        {% for p in PILARES %}
+          <tr>
+            <td>Pilar {{ PILAR_LABEL[p] }}</td>
+            <td class="num">{{ fmt(d.comparacao.anterior.pilares[p]) }}</td>
+            <td class="num">{{ fmt(d.comparacao.atual.pilares[p]) }}</td>
+            <td class="num" style="color: {% if d.comparacao.diffs.pilares[p] is none %}var(--ink-dim){% elif d.comparacao.diffs.pilares[p] >= 0 %}var(--green){% else %}var(--red){% endif %};">
+              {% if d.comparacao.diffs.pilares[p] is not none %}{{ '%+.1f' | format(d.comparacao.diffs.pilares[p]) }}{% else %}—{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        <tr>
+          <td>eNPS</td>
+          <td class="num">{{ fmt(d.comparacao.anterior.enps) }}</td>
+          <td class="num">{{ fmt(d.comparacao.atual.enps) }}</td>
+          <td class="num" style="color: {% if d.comparacao.diffs.enps is none %}var(--ink-dim){% elif d.comparacao.diffs.enps >= 0 %}var(--green){% else %}var(--red){% endif %};">
+            {% if d.comparacao.diffs.enps is not none %}{{ '%+.1f' | format(d.comparacao.diffs.enps) }}{% else %}—{% endif %}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    {% if d.comparacao.regressoes_acima_10 %}
+      <h3 class="serif gap-8" style="font-size: 18px;">Itens com regressão acima de 10 pontos (alerta §15.2)</h3>
+      <ul style="font-size: 12px; padding-left: 18px;">
+      {% for r in d.comparacao.regressoes_acima_10[:8] %}
+        <li><strong style="color: var(--red);">{{ r.delta }} p.p.</strong> · Item {{ r.num }} ({{ PILAR_LABEL[r.pilar] }}): de {{ r.anterior }}% para {{ r.atual }}%</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+  {% endif %}
 
   <p class="muted gap-12" style="font-size: 11px;">Relatório gerado em {{ agora.strftime("%d/%m/%Y às %H:%M") }} · Rodada {{ d.rodada.tipo }} · {{ d.empresa.nome }}</p>
 

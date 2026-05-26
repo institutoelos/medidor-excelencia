@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from app.models.db import init_db
-from app.routers import admin, forms, report
+from app.routers import admin, export, forms, report
 
 app = FastAPI(title="Medidor de Excelência ELOS — Pilar Pessoas")
 
@@ -16,6 +16,7 @@ app.mount("/static", StaticFiles(directory=os.path.join(_BASE, "static")), name=
 
 app.include_router(forms.router)
 app.include_router(admin.router)
+app.include_router(export.router)
 app.include_router(report.router)
 
 

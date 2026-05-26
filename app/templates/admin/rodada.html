@@ -110,6 +110,8 @@
     {% endif %}
     <a class="btn btn--copper" href="/relatorio/{{ rodada.id }}" target="_blank">Ver relatório (HTML)</a>
     <button class="btn btn--ghost" type="button" id="btn-pdf" onclick="baixarPdf(this, '/relatorio/{{ rodada.id }}/pdf')">Baixar PDF</button>
+    <a class="btn btn--ghost" href="/admin/rodadas/{{ rodada.id }}/export/colab.csv" download>CSV — colaboradores</a>
+    <a class="btn btn--ghost" href="/admin/rodadas/{{ rodada.id }}/export/socio.csv" download>CSV — sócios</a>
   </div>
 </div>
 

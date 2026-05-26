@@ -47,6 +47,72 @@ from app.models.db import (
 MINIMO_PARA_REPORTAR_CORTE = 5  # §17.2
 
 
+def comparar_com_anterior(db: Session, rodada_id: int) -> Optional[dict]:
+    """Compara a rodada atual com a anterior da mesma empresa (se houver).
+
+    Retorna None se for a primeira rodada. Itens com regressão > 10 são
+    sinalizados (§15.2).
+    """
+    rodada = db.query(Rodada).filter(Rodada.id == rodada_id).first()
+    if rodada is None:
+        return None
+    anterior = (
+        db.query(Rodada)
+        .filter(Rodada.empresa_id == rodada.empresa_id, Rodada.id != rodada_id, Rodada.id < rodada_id)
+        .order_by(Rodada.id.desc())
+        .first()
+    )
+    if anterior is None:
+        return None
+
+    # Métricas atuais e anteriores
+    def _calc(rid):
+        respostas = _respostas_likert_por_item(db, rid, "colab")
+        pilares = calcular_pilares_colab(respostas)
+        notas = {p: pilares[p]["nota_pilar"] for p in PILARES}
+        medidor = calcular_medidor(notas)
+        # NPS
+        ids = [r.id for r in db.query(RespondenteColab).filter(RespondenteColab.rodada_id == rid).all()]
+        nps_vals = [r[0] for r in db.query(RespostaNPS.valor_0_10).filter(RespostaNPS.respondente_id.in_(ids)).all()] if ids else []
+        enps = calcular_enps(nps_vals)["enps"]
+        return {"medidor": medidor, "pilares": notas, "enps": enps, "pilares_por_item": {p: pilares[p]["top2_por_item"] for p in PILARES}}
+
+    atual = _calc(rodada_id)
+    prev = _calc(anterior.id)
+
+    def _diff(a, b):
+        if a is None or b is None:
+            return None
+        return round(a - b, 1)
+
+    diffs = {
+        "medidor": _diff(atual["medidor"], prev["medidor"]),
+        "pilares": {p: _diff(atual["pilares"][p], prev["pilares"][p]) for p in PILARES},
+        "enps": _diff(atual["enps"], prev["enps"]),
+    }
+
+    # Regressões por item > 10 p.p.
+    regressoes = []
+    for p in PILARES:
+        for num, t2_atual in atual["pilares_por_item"][p].items():
+            t2_prev = prev["pilares_por_item"][p].get(num)
+            if t2_atual is None or t2_prev is None:
+                continue
+            d = t2_atual - t2_prev
+            if d <= -10:
+                regressoes.append({"num": num, "pilar": p, "atual": t2_atual, "anterior": t2_prev, "delta": round(d, 1)})
+    regressoes.sort(key=lambda r: r["delta"])
+
+    return {
+        "rodada_anterior": {"id": anterior.id, "tipo": anterior.tipo, "data": anterior.data_inicio},
+        "rodada_atual": {"id": rodada_id, "tipo": rodada.tipo, "data": rodada.data_inicio},
+        "atual": atual,
+        "anterior": prev,
+        "diffs": diffs,
+        "regressoes_acima_10": regressoes,
+    }
+
+
 def calcular_parciais_rodada(db: Session, rodada_id: int) -> dict:
     """Painel parcial enquanto a rodada está aberta: contagem, ritmo, médias por pilar.
 
@@ -562,6 +628,9 @@ def calcular_relatorio_completo(db: Session, rodada_id: int) -> dict:
     # Cortes demográficos
     cortes = cortes_demograficos(db, rodada_id)
 
+    # Comparação com rodada anterior (se houver)
+    comparacao = comparar_com_anterior(db, rodada_id)
+
     # Faixa do medidor
     faixa = faixa_do_medidor(medidor) if medidor is not None else faixa_do_medidor(0)
 
@@ -605,4 +674,5 @@ def calcular_relatorio_completo(db: Session, rodada_id: int) -> dict:
         "enps": enps,
         "retencao": retencao,
         "cortes": cortes,
+        "comparacao": comparacao,
     }
