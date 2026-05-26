@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Medidor de Excelência ELOS{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/elos.css">
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="topbar__inner">
+        <a class="brand" href="/admin">Medidor de <em>Excelência</em></a>
+        <span class="brand-small">ELO Business — Pilar Pessoas</span>
+      </div>
+    </header>
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+    <footer class="app">
+      ELOS · ELO Business — Programa de Excelência Empresarial
+    </footer>
+  </div>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

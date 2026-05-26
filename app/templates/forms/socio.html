@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Medidor de Excelência (Sócio) — {{ empresa.nome }}{% endblock %}
+{% block content %}
+
+<section class="form-hero">
+  <p class="eyebrow">Diagnóstico do Pilar Pessoas — Versão Sócio / Empresário</p>
+  <h1 class="serif">{{ empresa.nome }}</h1>
+  <p>Suas respostas geram o Relatório de Gap quando comparadas com as do time. Os primeiros 41 itens descrevem o que você <strong>observa</strong> no time (não o que pretende). Os 17 últimos perguntam sobre o sistema que você desenhou.</p>
+</section>
+
+<div class="progress-bar"><div class="progress-bar__fill"></div></div>
+<div style="display:flex; justify-content: space-between; margin-bottom: 24px;">
+  <span id="progress-label" class="eyebrow">0% preenchido</span>
+  <span id="saved-pill" class="saved-pill">Aguardando primeira resposta…</span>
+</div>
+
+<form id="form-medidor" method="post" action="/f/socio/{{ token }}/enviar" data-storage-key="medidor-socio-{{ token }}">
+
+  {% for pilar_codigo, pilar_label, secoes in agrupado %}
+    <h2 class="section-title serif">{{ pilar_label }}</h2>
+    {% for sec_label, itens in secoes %}
+      <p class="eyebrow" style="margin-top:24px;">{{ sec_label }}</p>
+      {% for num, texto in itens %}
+        <div class="item">
+          <div class="item__num">Item {{ num }}</div>
+          <div class="item__texto">{{ texto }}</div>
+          <div class="likert">
+            {% for v, rotulo in likert %}
+              <label class="likert__opt">
+                <input type="radio" name="item_{{ num }}" value="{{ v }}">
+                <strong>{{ v }}</strong>
+                <span>{{ rotulo }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    {% endfor %}
+  {% endfor %}
+
+  <h2 class="section-title serif">Pergunta síntese</h2>
+  <div class="item">
+    <div class="item__texto">{{ ancora_texto }}</div>
+    <div class="likert">
+      {% for v, rotulo in likert %}
+        <label class="likert__opt">
+          <input type="radio" name="ancora" value="{{ v }}">
+          <strong>{{ v }}</strong>
+          <span>{{ rotulo }}</span>
+        </label>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="actions">
+    <button type="submit" class="btn btn--copper">Enviar respostas</button>
+  </div>
+</form>
+
+{% endblock %}
+{% block scripts %}<script src="/static/js/form.js"></script>{% endblock %}
