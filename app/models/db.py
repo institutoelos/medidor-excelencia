@@ -29,6 +29,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     create_engine,
+    event,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker
 
@@ -38,12 +39,26 @@ DB_PATH = os.environ.get(
 )
 DB_PATH = os.path.abspath(DB_PATH)
 
-DATABASE_URL = f"sqlite:///{DB_PATH}"
+# Em produção (Railway), DATABASE_URL é injetada quando o serviço Postgres é
+# adicionado. Localmente, sem essa var, caímos no SQLite por padrão.
+_DATABASE_URL_RAW = os.environ.get("DATABASE_URL")
+if _DATABASE_URL_RAW:
+    # Railway/Heroku às vezes entregam postgres:// — SQLAlchemy 2 quer postgresql://
+    if _DATABASE_URL_RAW.startswith("postgres://"):
+        _DATABASE_URL_RAW = _DATABASE_URL_RAW.replace("postgres://", "postgresql+psycopg://", 1)
+    elif _DATABASE_URL_RAW.startswith("postgresql://"):
+        _DATABASE_URL_RAW = _DATABASE_URL_RAW.replace("postgresql://", "postgresql+psycopg://", 1)
+    DATABASE_URL = _DATABASE_URL_RAW
+    _IS_SQLITE = False
+else:
+    DATABASE_URL = f"sqlite:///{DB_PATH}"
+    _IS_SQLITE = True
 
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False},
+    connect_args={"check_same_thread": False} if _IS_SQLITE else {},
     echo=False,
+    pool_pre_ping=not _IS_SQLITE,  # útil em conexões longas com Postgres
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -68,6 +83,8 @@ class Empresa(Base):
     nome: Mapped[str] = mapped_column(String(200), nullable=False)
     data_entrada: Mapped[datetime] = mapped_column(DateTime, default=_now)
     lista_de_areas: Mapped[str] = mapped_column(Text, default="")  # CSV simples
+    tamanho_time_esperado: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    qtd_socios_esperados: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, default=1)
 
     rodadas: Mapped[list["Rodada"]] = relationship(back_populates="empresa", cascade="all, delete-orphan")
 
@@ -162,8 +179,36 @@ class RespostaRetencao(Base):
 
 
 def init_db() -> None:
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    if _IS_SQLITE:
+        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     Base.metadata.create_all(bind=engine)
+
+
+# Cascade manual: ao deletar um respondente, limpa suas respostas (FK polimórfica)
+def _limpar_respostas_colab(mapper, connection, target):
+    from sqlalchemy import delete
+    connection.execute(delete(Resposta).where(
+        (Resposta.respondente_id == target.id) & (Resposta.tipo_respondente == "colab")
+    ))
+    connection.execute(delete(RespostaAncora).where(
+        (RespostaAncora.respondente_id == target.id) & (RespostaAncora.tipo_respondente == "colab")
+    ))
+    connection.execute(delete(RespostaNPS).where(RespostaNPS.respondente_id == target.id))
+    connection.execute(delete(RespostaRetencao).where(RespostaRetencao.respondente_id == target.id))
+
+
+def _limpar_respostas_socio(mapper, connection, target):
+    from sqlalchemy import delete
+    connection.execute(delete(Resposta).where(
+        (Resposta.respondente_id == target.id) & (Resposta.tipo_respondente == "socio")
+    ))
+    connection.execute(delete(RespostaAncora).where(
+        (RespostaAncora.respondente_id == target.id) & (RespostaAncora.tipo_respondente == "socio")
+    ))
+
+
+event.listen(RespondenteColab, "before_delete", _limpar_respostas_colab)
+event.listen(RespondenteSocio, "before_delete", _limpar_respostas_socio)
 
 
 def get_session():

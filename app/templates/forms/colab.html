@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Medidor de Excelência — {{ empresa.nome }}{% endblock %}
+{% block content %}
+
+<section class="form-hero">
+  <p class="eyebrow">Diagnóstico do Pilar Pessoas — Versão Colaborador</p>
+  <h1 class="serif">{{ empresa.nome }}</h1>
+  <p>Esse diagnóstico é parte do programa <strong>ELO Business</strong> — Programa de Excelência Empresarial, contratado pela sua empresa. Suas respostas são <strong>individualmente confidenciais</strong>. Você pode pausar e voltar — o sistema salva seu progresso neste navegador automaticamente.</p>
+</section>
+
+<div class="confid-strip">
+  <strong>Como tratamos seus dados:</strong> respostas individuais não são compartilhadas com a empresa. O relatório final mostra apenas dados agregados, e qualquer recorte com menos de <strong>5 respondentes</strong> é suprimido para preservar seu anonimato.
+</div>
+
+<div class="progress-sticky">
+  <div class="progress-bar"><div class="progress-bar__fill"></div></div>
+  <div class="info">
+    <span><strong id="progress-label">0%</strong></span>
+    <span id="time-label">Estimativa: ~12 min (média histórica)</span>
+  </div>
+  <div class="info">
+    <span class="eyebrow" id="pilar-label">Início</span>
+    <span class="saved-pill" id="saved-pill">aguardando primeira resposta</span>
+  </div>
+</div>
+
+<form id="form-medidor" method="post" action="/f/colab/{{ token }}/enviar" data-storage-key="medidor-colab-{{ token }}">
+
+  {% for pilar_codigo, pilar_label, subpilares in itens_agrupados %}
+    <h2 class="section-title serif" data-pilar="{{ pilar_label }}">{{ pilar_label }}</h2>
+    <p class="section-sub">Para cada afirmação, marque a opção que melhor descreve a sua vivência nesta empresa hoje. <strong>{{ subpilares | sum(attribute=2, start=[]) | length }} itens</strong> nesta seção.</p>
+
+    {% for sub_codigo, sub_label, itens in subpilares %}
+      <p class="eyebrow" style="margin-top:24px;">{{ sub_label }} · {{ itens | length }} itens</p>
+      {% for num, texto in itens %}
+        <div class="item">
+          <div class="item__num">Item {{ num }} de 58</div>
+          <div class="item__texto">{{ texto }}</div>
+          <div class="likert">
+            {% for v, rotulo in likert %}
+              <label class="likert__opt">
+                <input type="radio" name="item_{{ num }}" value="{{ v }}">
+                <strong>{{ v }}</strong>
+                <span>{{ rotulo }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    {% endfor %}
+  {% endfor %}
+
+  <h2 class="section-title serif" data-pilar="Pergunta síntese">Pergunta síntese</h2>
+  <p class="section-sub">Levando tudo em conta agora.</p>
+  <div class="item">
+    <div class="item__texto">{{ ancora_texto }}</div>
+    <div class="likert">
+      {% for v, rotulo in likert %}
+        <label class="likert__opt">
+          <input type="radio" name="ancora" value="{{ v }}">
+          <strong>{{ v }}</strong>
+          <span>{{ rotulo }}</span>
+        </label>
+      {% endfor %}
+    </div>
+  </div>
+
+  <h2 class="section-title serif" data-pilar="Recomendação">Recomendação</h2>
+  <div class="item">
+    <div class="item__texto">{{ nps_pergunta }}</div>
+    <p class="muted" style="font-size:12px; margin: 0 0 12px;">0 = jamais indicaria · 10 = indicaria com convicção</p>
+    <div class="nps-grid">
+      {% for n in range(0, 11) %}
+        <label><input type="radio" name="nps" value="{{ n }}">{{ n }}</label>
+      {% endfor %}
+    </div>
+  </div>
+
+  <h2 class="section-title serif" data-pilar="Permanência">Permanência</h2>
+  <div class="item">
+    <div class="item__texto">{{ retencao_pergunta }}</div>
+    <ul class="opt-list">
+      {% for codigo, label in retencao_opcoes %}
+        <li>
+          <label>
+            <input type="radio" name="retencao" value="{{ codigo }}">
+            <span>{{ label }}</span>
+          </label>
+        </li>
+      {% endfor %}
+    </ul>
+    <div style="margin-top:12px;">
+      <label class="eyebrow" for="retencao_outro">Descreva o motivo (obrigatório se marcou "Outro"):</label>
+      <input type="text" class="textinput" id="retencao_outro" name="retencao_outro" placeholder="(opcional)">
+    </div>
+  </div>
+
+  <h2 class="section-title serif" data-pilar="Sobre você">Sobre você</h2>
+  <p class="section-sub">Usado apenas para cruzar dados agregados no relatório. Recortes com menos de 5 respondentes são suprimidos.</p>
+  <div class="item">
+    <label class="eyebrow" for="tempo_de_casa">Tempo de casa</label>
+    <select class="select" id="tempo_de_casa" name="tempo_de_casa" required>
+      <option value="">Selecione…</option>
+      {% for codigo, label in demo_tempo %}
+        <option value="{{ codigo }}">{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="item">
+    <label class="eyebrow" for="tipo_de_cargo">Tipo de cargo</label>
+    <select class="select" id="tipo_de_cargo" name="tipo_de_cargo" required>
+      <option value="">Selecione…</option>
+      {% for codigo, label in demo_cargo %}
+        <option value="{{ codigo }}">{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="item">
+    <label class="eyebrow" for="area">Área de trabalho</label>
+    {% if empresa.areas_lista() %}
+      <select class="select" id="area" name="area" required>
+        <option value="">Selecione…</option>
+        {% for a in empresa.areas_lista() %}
+          <option value="{{ a }}">{{ a }}</option>
+        {% endfor %}
+      </select>
+    {% else %}
+      <input type="text" class="textinput" id="area" name="area" placeholder="Ex.: comercial, financeiro…" required>
+    {% endif %}
+  </div>
+
+  <div class="actions">
+    <button type="submit" class="btn btn--copper">Enviar respostas</button>
+  </div>
+</form>
+
+{% endblock %}
+{% block scripts %}<script src="/static/js/form.js"></script>{% endblock %}

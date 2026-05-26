@@ -27,10 +27,11 @@ from app.content.items import (
     ITENS_COLABORADOR,
     ITENS_SOCIO_DIVERGENTE,
     ITENS_SOCIO_ESPELHO,
-    PILARES,
     PILAR_CULTURA,
     PILAR_EDUCACAO,
     PILAR_FEEDBACK,
+    PILAR_LABEL,
+    PILARES,
     faixa_do_medidor,
 )
 from app.models.db import (
@@ -44,6 +45,138 @@ from app.models.db import (
 )
 
 MINIMO_PARA_REPORTAR_CORTE = 5  # §17.2
+
+
+def comparar_com_anterior(db: Session, rodada_id: int) -> Optional[dict]:
+    """Compara a rodada atual com a anterior da mesma empresa (se houver).
+
+    Retorna None se for a primeira rodada. Itens com regressão > 10 são
+    sinalizados (§15.2).
+    """
+    rodada = db.query(Rodada).filter(Rodada.id == rodada_id).first()
+    if rodada is None:
+        return None
+    anterior = (
+        db.query(Rodada)
+        .filter(Rodada.empresa_id == rodada.empresa_id, Rodada.id != rodada_id, Rodada.id < rodada_id)
+        .order_by(Rodada.id.desc())
+        .first()
+    )
+    if anterior is None:
+        return None
+
+    # Métricas atuais e anteriores
+    def _calc(rid):
+        respostas = _respostas_likert_por_item(db, rid, "colab")
+        pilares = calcular_pilares_colab(respostas)
+        notas = {p: pilares[p]["nota_pilar"] for p in PILARES}
+        medidor = calcular_medidor(notas)
+        # NPS
+        ids = [r.id for r in db.query(RespondenteColab).filter(RespondenteColab.rodada_id == rid).all()]
+        nps_vals = [r[0] for r in db.query(RespostaNPS.valor_0_10).filter(RespostaNPS.respondente_id.in_(ids)).all()] if ids else []
+        enps = calcular_enps(nps_vals)["enps"]
+        return {"medidor": medidor, "pilares": notas, "enps": enps, "pilares_por_item": {p: pilares[p]["top2_por_item"] for p in PILARES}}
+
+    atual = _calc(rodada_id)
+    prev = _calc(anterior.id)
+
+    def _diff(a, b):
+        if a is None or b is None:
+            return None
+        return round(a - b, 1)
+
+    diffs = {
+        "medidor": _diff(atual["medidor"], prev["medidor"]),
+        "pilares": {p: _diff(atual["pilares"][p], prev["pilares"][p]) for p in PILARES},
+        "enps": _diff(atual["enps"], prev["enps"]),
+    }
+
+    # Regressões por item > 10 p.p.
+    regressoes = []
+    for p in PILARES:
+        for num, t2_atual in atual["pilares_por_item"][p].items():
+            t2_prev = prev["pilares_por_item"][p].get(num)
+            if t2_atual is None or t2_prev is None:
+                continue
+            d = t2_atual - t2_prev
+            if d <= -10:
+                regressoes.append({"num": num, "pilar": p, "atual": t2_atual, "anterior": t2_prev, "delta": round(d, 1)})
+    regressoes.sort(key=lambda r: r["delta"])
+
+    return {
+        "rodada_anterior": {"id": anterior.id, "tipo": anterior.tipo, "data": anterior.data_inicio},
+        "rodada_atual": {"id": rodada_id, "tipo": rodada.tipo, "data": rodada.data_inicio},
+        "atual": atual,
+        "anterior": prev,
+        "diffs": diffs,
+        "regressoes_acima_10": regressoes,
+    }
+
+
+def calcular_parciais_rodada(db: Session, rodada_id: int) -> dict:
+    """Painel parcial enquanto a rodada está aberta: contagem, ritmo, médias por pilar.
+
+    Não substitui o relatório fechado — serve só pro mentor acompanhar a coleta.
+    """
+    from datetime import datetime, timedelta
+    rodada = db.query(Rodada).filter(Rodada.id == rodada_id).first()
+    if rodada is None:
+        return {}
+
+    respondentes_colab = (
+        db.query(RespondenteColab)
+        .filter(RespondenteColab.rodada_id == rodada_id)
+        .all()
+    )
+    respondentes_socio = (
+        db.query(RespondenteSocio)
+        .filter(RespondenteSocio.rodada_id == rodada_id)
+        .all()
+    )
+    n_colab = len(respondentes_colab)
+    n_socio = len(respondentes_socio)
+
+    esperado_colab = rodada.empresa.tamanho_time_esperado
+    esperado_socio = rodada.empresa.qtd_socios_esperados or 1
+    pct_colab = (round(n_colab / esperado_colab * 100, 1) if esperado_colab else None)
+    pct_socio = round(n_socio / esperado_socio * 100, 1) if esperado_socio else None
+
+    # Ritmo nas últimas 24h
+    agora = datetime.utcnow()
+    ult_24h = agora - timedelta(hours=24)
+    ult_24h_colab = sum(1 for r in respondentes_colab if r.criado_em and r.criado_em >= ult_24h)
+    ult_24h_socio = sum(1 for r in respondentes_socio if r.criado_em and r.criado_em >= ult_24h)
+
+    # Médias parciais (Top 2 Box por pilar, colab apenas)
+    respostas_colab_map = _respostas_likert_por_item(db, rodada_id, "colab")
+    pilares_colab_parcial = calcular_pilares_colab(respostas_colab_map)
+    notas_parciais = {p: pilares_colab_parcial[p]["nota_pilar"] for p in PILARES}
+    medidor_parcial = calcular_medidor(notas_parciais)
+
+    return {
+        "rodada_id": rodada_id,
+        "rodada_tipo": rodada.tipo,
+        "rodada_status": rodada.status,
+        "rodada_inicio": rodada.data_inicio,
+        "empresa_nome": rodada.empresa.nome,
+        "contagens": {
+            "colab": n_colab,
+            "colab_esperado": esperado_colab,
+            "colab_pct": pct_colab,
+            "socio": n_socio,
+            "socio_esperado": esperado_socio,
+            "socio_pct": pct_socio,
+            "ult_24h_colab": ult_24h_colab,
+            "ult_24h_socio": ult_24h_socio,
+        },
+        "parciais": {
+            "medidor": medidor_parcial,
+            "pilares": notas_parciais,
+            "faixa": faixa_do_medidor(medidor_parcial) if medidor_parcial is not None else None,
+        } if n_colab > 0 else None,
+        "minimo_para_parciais_relevantes": 5,
+        "parciais_sao_relevantes": n_colab >= 5,
+    }
 
 
 # ─── Funções puras (cálculo) ────────────────────────────────────────────────
@@ -495,6 +628,9 @@ def calcular_relatorio_completo(db: Session, rodada_id: int) -> dict:
     # Cortes demográficos
     cortes = cortes_demograficos(db, rodada_id)
 
+    # Comparação com rodada anterior (se houver)
+    comparacao = comparar_com_anterior(db, rodada_id)
+
     # Faixa do medidor
     faixa = faixa_do_medidor(medidor) if medidor is not None else faixa_do_medidor(0)
 
@@ -538,4 +674,5 @@ def calcular_relatorio_completo(db: Session, rodada_id: int) -> dict:
         "enps": enps,
         "retencao": retencao,
         "cortes": cortes,
+        "comparacao": comparacao,
     }

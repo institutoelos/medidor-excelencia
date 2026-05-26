@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Resposta registrada{% endblock %}
+{% block content %}
+<div class="thanks">
+  <img src="/static/img/logo-elos.png" alt="ELOS" class="thanks__logo">
+  <h1 class="serif">Pronto.</h1>
+  <p class="lead">Suas respostas foram registradas. Quando o time terminar de responder, o Relatório de Gap fica disponível na mentoria — e é a partir dele que abrimos o trabalho dos próximos 12 meses.</p>
+
+  <div class="recibo">
+    <p class="eyebrow">Recibo</p>
+    <dl>
+      <dt>Empresa</dt><dd><strong>{{ empresa.nome }}</strong></dd>
+      <dt>Rodada</dt><dd>{{ rodada.tipo }}</dd>
+      <dt>Registrada em</dt><dd class="num">{{ finalizado_em.strftime("%d/%m/%Y às %H:%M") }}</dd>
+      <dt>Itens respondidos</dt><dd class="num">41 espelho + 17 sobre o sistema + âncora</dd>
+    </dl>
+  </div>
+
+  <div class="next-step">
+    Acompanhe a coleta do time pelo painel do programa (com o mentor ELOS). Esta página vai aparecer no lugar do formulário se você abrir o link de novo, evitando respostas duplicadas.
+  </div>
+</div>
+{% endblock %}
