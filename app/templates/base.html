@@ -15,7 +15,12 @@
           <img src="/static/img/signo-elos.png" alt="ELOS" class="brand-bar__sigil">
           <span class="brand">Medidor de <em>Excelência</em></span>
         </a>
-        <span class="brand-small">ELO Business — Pilar Pessoas</span>
+        <span class="brand-small">
+          ELO Business — Pilar Pessoas
+          {% if request.url.path.startswith('/admin') %}
+            · <a class="brand-small__link" href="/logout">Sair</a>
+          {% endif %}
+        </span>
       </div>
     </header>
     <main>

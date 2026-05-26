@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Acesso ao painel — Medidor de Excelência ELOS{% endblock %}
+
+{% block content %}
+<div class="login-shell">
+  <div class="login-card card">
+    <span class="eyebrow">Painel administrativo</span>
+    <h1 class="serif login-card__title">Acesso ao painel</h1>
+    <p class="login-card__lead">
+      Entre com suas credenciais para gerenciar empresas, rodadas e relatórios.
+    </p>
+
+    {% if erro %}
+    <div class="flash flash--err">Usuário ou senha incorretos.</div>
+    {% endif %}
+
+    <form class="login-form" method="post" action="/login" autocomplete="on">
+      <input type="hidden" name="next" value="{{ next }}">
+
+      <label class="login-form__field">
+        <span class="login-form__label">Usuário</span>
+        <input class="textinput" name="usuario" autocomplete="username" required autofocus>
+      </label>
+
+      <label class="login-form__field">
+        <span class="login-form__label">Senha</span>
+        <input class="textinput" type="password" name="senha" autocomplete="current-password" required>
+      </label>
+
+      <div class="login-form__actions">
+        <button class="btn btn--copper" type="submit">Entrar no painel</button>
+      </div>
+    </form>
+  </div>
+
+  <p class="login-foot">
+    <a href="/">← Voltar para a página inicial</a>
+  </p>
+</div>
+{% endblock %}

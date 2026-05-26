@@ -627,3 +627,53 @@ table.std th { color: var(--ink-dim); font-weight: 600; font-size: 12px; text-tr
 }
 .method-list__k { font-size: 13px; font-weight: 600; }
 .method-list__v { font-size: 12px; color: var(--ink-dim); margin-top: 2px; }
+
+/* ============== Login ============== */
+.login-shell {
+  max-width: 460px;
+  margin: 64px auto 48px;
+  padding: 0 20px;
+}
+.login-card { padding: 36px 32px 32px; }
+.login-card__title {
+  font-size: 30px;
+  line-height: 1.15;
+  margin: 10px 0 8px;
+}
+.login-card__lead {
+  color: var(--ink-dim);
+  margin: 0 0 24px;
+  font-size: 15px;
+}
+.login-form { display: flex; flex-direction: column; gap: 16px; }
+.login-form__field { display: flex; flex-direction: column; gap: 6px; }
+.login-form__label {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  font-weight: 600;
+}
+.login-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+.login-foot {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 13px;
+}
+.login-foot a {
+  color: var(--ink-dim);
+  text-decoration: none;
+}
+.login-foot a:hover { color: var(--ink); }
+
+.brand-small__link {
+  color: var(--ink-dim);
+  text-decoration: none;
+  border-bottom: 0.5px solid var(--hairline);
+  padding-bottom: 1px;
+}
+.brand-small__link:hover { color: var(--ink); border-color: var(--ink); }
