@@ -30,6 +30,8 @@ from sqlalchemy import (
     UniqueConstraint,
     create_engine,
     event,
+    inspect,
+    text,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker
 
@@ -122,6 +124,7 @@ class RespondenteColab(Base):
     tempo_de_casa: Mapped[Optional[str]] = mapped_column(String(32))
     tipo_de_cargo: Mapped[Optional[str]] = mapped_column(String(32))
     area: Mapped[Optional[str]] = mapped_column(String(120))
+    lider_direto: Mapped[Optional[str]] = mapped_column(String(120))
     criado_em: Mapped[datetime] = mapped_column(DateTime, default=_now)
     finalizado_em: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
@@ -178,10 +181,21 @@ class RespostaRetencao(Base):
     texto_aberto: Mapped[Optional[str]] = mapped_column(Text)
 
 
+def _ensure_column(conn, table: str, column: str, ddl_type: str) -> None:
+    """Add column to existing table if missing. SQLite + Postgres compatible."""
+    insp = inspect(conn)
+    cols = {c["name"] for c in insp.get_columns(table)}
+    if column not in cols:
+        conn.execute(text(f'ALTER TABLE {table} ADD COLUMN {column} {ddl_type}'))
+
+
 def init_db() -> None:
     if _IS_SQLITE:
         os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     Base.metadata.create_all(bind=engine)
+    # Migrações in-place pra bancos pré-existentes (Railway/Postgres em produção).
+    with engine.begin() as conn:
+        _ensure_column(conn, "respondentes_colab", "lider_direto", "VARCHAR(120)")
 
 
 # Cascade manual: ao deletar um respondente, limpa suas respostas (FK polimórfica)

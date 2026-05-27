@@ -5,72 +5,89 @@
 <section class="form-hero">
   <p class="eyebrow">Diagnóstico do Pilar Pessoas — Versão Sócio / Empresário</p>
   <h1 class="serif">{{ empresa.nome }}</h1>
-  <p>Suas respostas geram o <strong>Relatório de Gap</strong> quando comparadas com as do time. Os primeiros 41 itens descrevem o que você <strong>observa acontecendo</strong> com o time — não o que você pretende ou acredita. Os 17 últimos perguntam sobre o sistema que você desenhou.</p>
+  <p>
+    Suas respostas geram o <strong>Relatório de Gap</strong> quando comparadas com as do time.
+    Os primeiros 41 itens descrevem o que você <strong>observa acontecendo</strong> — não o que
+    você pretende ou acredita. Os 17 últimos perguntam sobre o sistema que você desenhou.
+    Quanto mais honesto agora, mais útil será o Plano de Ação.
+  </p>
 </section>
-
-<div class="confid-strip">
-  <strong>Importante:</strong> aqui não há resposta certa ou errada. Quanto mais honesto você for agora — especialmente nos 17 últimos itens —, mais útil será seu Plano de Ação na mentoria.
-</div>
 
 <div class="progress-sticky">
   <div class="progress-bar"><div class="progress-bar__fill"></div></div>
   <div class="info">
-    <span><strong id="progress-label">0%</strong></span>
-    <span id="time-label">Estimativa: ~12 min</span>
-  </div>
-  <div class="info">
     <span class="eyebrow" id="pilar-label">Início</span>
-    <span class="saved-pill" id="saved-pill">aguardando primeira resposta</span>
+    <span class="saved-pill" id="saved-pill">progresso salvo automaticamente</span>
   </div>
 </div>
 
-<form id="form-medidor" method="post" action="/f/socio/{{ token }}/enviar" data-storage-key="medidor-socio-{{ token }}">
+<form id="form-medidor" class="wizard" method="post" action="/f/socio/{{ token }}/enviar" data-storage-key="medidor-socio-{{ token }}">
 
+  {% set ns = namespace(divergent_shown=false) %}
   {% for pilar_codigo, pilar_label, secoes in agrupado %}
-    <h2 class="section-title serif" data-pilar="{{ pilar_label }} (observação)">{{ pilar_label }}</h2>
     {% for sec_label, itens in secoes %}
-      {% if "perguntas para o sócio" in sec_label %}
-        <div class="divergente-strip">
-          <h3>Agora sobre você, o sistema que você desenhou</h3>
-          <p>Os próximos itens são perguntas para o sócio, não observação do time. Não tem certo nem errado. Se a resposta honesta for "não sei dizer", marque baixo — isso ajuda a calibrar seu Plano de Ação.</p>
-        </div>
+      {% if "perguntas para o sócio" in sec_label and not ns.divergent_shown %}
+        {% set ns.divergent_shown = true %}
+        <section class="step step--marker" data-step-type="marker" data-step-name="marker_divergente" data-pilar="Sobre você" aria-labelledby="step-title-marker" hidden>
+          <p class="step__eyebrow eyebrow">Mudança de bloco</p>
+          <h2 class="serif step__title" id="step-title-marker">Agora sobre o sistema que você desenhou</h2>
+          <p class="step__hint">
+            Os próximos itens são perguntas para o sócio — não observação do time. Não tem certo
+            nem errado. Se a resposta honesta for "não sei dizer", marque baixo. Isso ajuda a
+            calibrar seu Plano de Ação.
+          </p>
+        </section>
       {% endif %}
-      <p class="eyebrow" style="margin-top:24px;">{{ sec_label }} · {{ itens | length }} itens</p>
       {% for num, texto in itens %}
-        <div class="item">
-          <div class="item__num">Item {{ num }} de 58</div>
-          <div class="item__texto">{{ texto }}</div>
-          <div class="likert">
+        <section class="step" data-step-type="likert" data-step-name="item_{{ num }}" data-pilar="{{ pilar_label }}" aria-labelledby="step-title-{{ num }}" hidden>
+          <p class="step__eyebrow eyebrow">{{ pilar_label }} · {{ sec_label }}</p>
+          <h2 class="serif step__title" id="step-title-{{ num }}">{{ texto }}</h2>
+          <p class="step__hint">Em uma escala de 1 a 5.</p>
+          <div class="likert likert--wizard" role="radiogroup" aria-labelledby="step-title-{{ num }}">
             {% for v, rotulo in likert %}
-              <label class="likert__opt">
+              <label class="likert__opt" data-key="{{ v }}">
                 <input type="radio" name="item_{{ num }}" value="{{ v }}">
                 <strong>{{ v }}</strong>
                 <span>{{ rotulo }}</span>
               </label>
             {% endfor %}
           </div>
-        </div>
+          <p class="step__shortcut">Atalho: pressione <kbd>1</kbd> a <kbd>5</kbd>.</p>
+        </section>
       {% endfor %}
     {% endfor %}
   {% endfor %}
 
-  <h2 class="section-title serif" data-pilar="Pergunta síntese">Pergunta síntese</h2>
-  <div class="item">
-    <div class="item__texto">{{ ancora_texto }}</div>
-    <div class="likert">
+  <section class="step" data-step-type="likert" data-step-name="ancora" data-pilar="Síntese" aria-labelledby="step-title-ancora" hidden>
+    <p class="step__eyebrow eyebrow">Pergunta síntese</p>
+    <h2 class="serif step__title" id="step-title-ancora">{{ ancora_texto }}</h2>
+    <p class="step__hint">Levando tudo em conta agora.</p>
+    <div class="likert likert--wizard" role="radiogroup" aria-labelledby="step-title-ancora">
       {% for v, rotulo in likert %}
-        <label class="likert__opt">
+        <label class="likert__opt" data-key="{{ v }}">
           <input type="radio" name="ancora" value="{{ v }}">
           <strong>{{ v }}</strong>
           <span>{{ rotulo }}</span>
         </label>
       {% endfor %}
     </div>
+    <p class="step__shortcut">Atalho: pressione <kbd>1</kbd> a <kbd>5</kbd>.</p>
+  </section>
+
+  <section class="step step--final" data-step-type="final" data-step-name="final" data-pilar="Revisar" aria-labelledby="step-title-final" hidden>
+    <p class="step__eyebrow eyebrow">Tudo pronto</p>
+    <h2 class="serif step__title" id="step-title-final">Suas respostas estão prontas pra enviar</h2>
+    <p class="step__hint">Volte e revise se quiser. Depois de enviar, não dá mais pra editar.</p>
+    <button type="submit" class="btn btn--copper btn--full">Enviar diagnóstico</button>
+  </section>
+
+  <div class="wizard__nav" role="group" aria-label="Navegação do questionário">
+    <button type="button" class="btn btn--ghost" id="wiz-back" aria-label="Voltar para a pergunta anterior">← Voltar</button>
+    <span class="wizard__counter" id="wiz-counter" aria-live="polite"></span>
+    <button type="button" class="btn btn--copper" id="wiz-next">Continuar →</button>
   </div>
 
-  <div class="actions">
-    <button type="submit" class="btn btn--copper">Enviar respostas</button>
-  </div>
+  <div class="wizard__live" id="wiz-live" aria-live="polite" aria-atomic="true"></div>
 </form>
 
 {% endblock %}
