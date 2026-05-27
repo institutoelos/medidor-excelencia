@@ -258,8 +258,43 @@ h3.serif { font-family: var(--font-display); font-weight: 400; }
 .item-bar__num { color: var(--ink-dim); font-size: 10px; margin-right: 4mm; }
 .item-bar__text { color: var(--ink-2); }
 .item-bar__pct { text-align: right; font-weight: 600; font-family: var(--font-display); font-size: 15px; }
+.item-bar__metrics { display: flex; flex-direction: column; gap: 1.2mm; }
+.item-bar__detail { font-size: 9.5px; color: var(--ink-dim); letter-spacing: 0.02em; }
 
 .bar-svg-wrap { height: 8px; background: var(--paper-2); border-radius: 999px; overflow: hidden; }
+
+/* Distribuição 1..5 por item */
+.dist-bar {
+  display: flex;
+  height: 7px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--paper-2);
+  border: 0.5px solid var(--hairline);
+}
+.dist-bar__seg { min-width: 0; transition: none; }
+.dist-bar__seg.s1 { background: var(--red); }
+.dist-bar__seg.s2 { background: var(--red-soft); }
+.dist-bar__seg.s3 { background: var(--ink-muted); }
+.dist-bar__seg.s4 { background: var(--green-claro); }
+.dist-bar__seg.s5 { background: var(--green); }
+
+.dist-legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4mm;
+  font-size: 9.5px;
+  color: var(--ink-dim);
+  margin: 2mm 0 4mm;
+  letter-spacing: 0.02em;
+}
+.dist-legenda__item { display: inline-flex; align-items: center; gap: 1.5mm; }
+.dist-legenda__sw {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 2px;
+  border: 0.5px solid var(--hairline);
+}
 
 /* Gap chart (barras duplas) */
 .gap-item {

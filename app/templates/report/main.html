@@ -235,11 +235,14 @@
 
   <div style="display:grid; grid-template-columns: 1fr 1.6fr; gap: 10mm; margin-bottom: 8mm;">
     <div class="pilar-card" style="border-width: 1.5px; border-color: var(--hairline-strong);">
-      <div class="pilar-card__label">Nota do pilar (Top 2 Box)</div>
-      <div class="pilar-card__nota" style="color: {{ cor_pilar(nota) }}; font-size: 72px;">{{ fmt(nota) }}</div>
+      <div class="pilar-card__label">Respostas positivas no pilar</div>
+      <div class="pilar-card__nota" style="color: {{ cor_pilar(nota) }}; font-size: 72px;">{{ fmt(nota) }}{% if nota is not none %}<span style="font-size:32px;">%</span>{% endif %}</div>
       <div class="pilar-card__media">Média 1–5: <strong class="num">{{ fmt(pdata.media_pilar) }}</strong></div>
       <div class="pilar-card__bar"><div class="pilar-card__bar-fill" style="width:{{ nota or 0 }}%; background:{{ cor_pilar(nota) }};"></div></div>
-      <p class="muted" style="margin-top:6mm; font-size:11px;">Baseado em {{ pdata.n_itens }} itens e {{ pdata.n_respostas_total }} respostas individuais.</p>
+      <p class="muted" style="margin-top:6mm; font-size:10.5px; line-height:1.4;">
+        % de pessoas que deram nota <strong>4 ou 5</strong> — convicção positiva (padrão Trust Index/GPTW). Nota 3 é neutra e não conta como positiva nem negativa. A média 1–5 mostra a leitura completa.
+      </p>
+      <p class="muted" style="margin-top:3mm; font-size:11px;">Baseado em {{ pdata.n_itens }} itens e {{ pdata.n_respostas_total }} respostas individuais.</p>
     </div>
     <div>
       {# Itens mais fortes e mais frágeis #}
@@ -250,25 +253,48 @@
       <p class="eyebrow">3 itens mais frágeis</p>
       {% for num, t2 in tres_fragies %}
         <div style="font-size: 11.5px; margin-bottom: 3mm;">
-          <strong style="color: var(--red);">{{ fmt(t2, "%") }}</strong> — Item {{ num }}: {{ textos_colab[num] }}
+          <strong style="color: var(--red);">{{ fmt(t2, "%") }} positivo</strong>
+          <span class="muted" style="font-size:10px;">· média {{ fmt(pdata.media_por_item[num]) }} · {{ pdata.n_por_item[num] }} resp.</span>
+          <br>Item {{ num }}: {{ textos_colab[num] }}
         </div>
       {% endfor %}
       <p class="eyebrow" style="margin-top:6mm;">3 itens mais fortes</p>
       {% for num, t2 in tres_fortes %}
         <div style="font-size: 11.5px; margin-bottom: 3mm;">
-          <strong style="color: var(--green);">{{ fmt(t2, "%") }}</strong> — Item {{ num }}: {{ textos_colab[num] }}
+          <strong style="color: var(--green);">{{ fmt(t2, "%") }} positivo</strong>
+          <span class="muted" style="font-size:10px;">· média {{ fmt(pdata.media_por_item[num]) }} · {{ pdata.n_por_item[num] }} resp.</span>
+          <br>Item {{ num }}: {{ textos_colab[num] }}
         </div>
       {% endfor %}
     </div>
   </div>
 
-  <p class="eyebrow">Todos os {{ pdata.n_itens }} itens (Top 2 Box · ordenado do mais frágil ao mais forte)</p>
+  <p class="eyebrow">Todos os {{ pdata.n_itens }} itens · % positivo (notas 4–5), ordenado do mais frágil ao mais forte</p>
+  <div class="dist-legenda">
+    <span class="dist-legenda__item"><span class="dist-legenda__sw" style="background:var(--red);"></span>1 Nunca</span>
+    <span class="dist-legenda__item"><span class="dist-legenda__sw" style="background:var(--red-soft);"></span>2 Raramente</span>
+    <span class="dist-legenda__item"><span class="dist-legenda__sw" style="background:var(--ink-muted);"></span>3 Às vezes (neutro)</span>
+    <span class="dist-legenda__item"><span class="dist-legenda__sw" style="background:var(--green-claro);"></span>4 Quase sempre</span>
+    <span class="dist-legenda__item"><span class="dist-legenda__sw" style="background:var(--green);"></span>5 Sempre</span>
+  </div>
   {% set itens_ord = pdata.top2_por_item.items() | rejectattr("1", "none") | sort(attribute=1) %}
   {% for num, t2 in itens_ord %}
     {% set texto_item = textos_colab[num] %}
+    {% set dist = pdata.distribuicao_por_item[num] %}
+    {% set n_item = pdata.n_por_item[num] %}
+    {% set media_item = pdata.media_por_item[num] %}
     <div class="item-bar">
       <span class="item-bar__text"><span class="item-bar__num">{{ num }}.</span>{{ texto_item }}</span>
-      <div class="bar-svg-wrap"><div style="width: {{ t2 }}%; height: 100%; background: {{ cor_pilar(t2) }};"></div></div>
+      <div class="item-bar__metrics">
+        <div class="dist-bar" title="1:{{ dist[1] }} · 2:{{ dist[2] }} · 3:{{ dist[3] }} · 4:{{ dist[4] }} · 5:{{ dist[5] }}">
+          <div class="dist-bar__seg s1" style="flex: {{ dist[1] }};"></div>
+          <div class="dist-bar__seg s2" style="flex: {{ dist[2] }};"></div>
+          <div class="dist-bar__seg s3" style="flex: {{ dist[3] }};"></div>
+          <div class="dist-bar__seg s4" style="flex: {{ dist[4] }};"></div>
+          <div class="dist-bar__seg s5" style="flex: {{ dist[5] }};"></div>
+        </div>
+        <span class="item-bar__detail">média {{ fmt(media_item) }} · {{ n_item }} resp.</span>
+      </div>
       <span class="item-bar__pct" style="color: {{ cor_pilar(t2) }};">{{ t2 }}%</span>
     </div>
   {% endfor %}

@@ -196,6 +196,15 @@ def calcular_media_ponderada(valores: Iterable[int]) -> Optional[float]:
     return round(sum(valores) / len(valores), 2)
 
 
+def calcular_distribuicao(valores: Iterable[int]) -> dict[int, int]:
+    """Contagem absoluta de cada nota 1..5. Itens sem resposta = todos zero."""
+    contagem = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+    for v in valores:
+        if v in contagem:
+            contagem[v] += 1
+    return contagem
+
+
 def calcular_enps(notas_0_10: Iterable[int]) -> dict:
     """Fórmula correta NPS: % Promotores (9–10) − % Detratores (0–6).
 
@@ -311,16 +320,20 @@ def _itens_por_pilar_socio_divergente(pilar: str) -> list[int]:
 
 
 def calcular_pilares_colab(respostas_por_item: dict[int, list[int]]) -> dict:
-    """Para cada pilar Colab, retorna {top2_por_item, media_por_item, nota_pilar, media_pilar}."""
+    """Para cada pilar Colab, retorna top2/média/distribuição por item + agregados do pilar."""
     resultado = {}
     for pilar in PILARES:
         item_nums = _itens_por_pilar_colab(pilar)
         top2_itens = {}
         media_itens = {}
+        dist_itens = {}
+        n_itens_resp = {}
         for n in item_nums:
             vals = respostas_por_item.get(n, [])
             top2_itens[n] = calcular_top2box(vals)
             media_itens[n] = calcular_media_ponderada(vals)
+            dist_itens[n] = calcular_distribuicao(vals)
+            n_itens_resp[n] = len(vals)
         nota_pilar = calcular_nota_pilar(top2_itens.values())
         # Média ponderada do pilar (1-5)
         todas_resp = [v for n in item_nums for v in respostas_por_item.get(n, [])]
@@ -328,6 +341,8 @@ def calcular_pilares_colab(respostas_por_item: dict[int, list[int]]) -> dict:
         resultado[pilar] = {
             "top2_por_item": top2_itens,
             "media_por_item": media_itens,
+            "distribuicao_por_item": dist_itens,
+            "n_por_item": n_itens_resp,
             "nota_pilar": nota_pilar,
             "media_pilar": media_pilar,
             "n_itens": len(item_nums),
