@@ -19,6 +19,8 @@
           ELO Business — Pilar Pessoas
           {% if request.url.path.startswith('/admin') %}
             · <a class="brand-small__link" href="/logout">Sair</a>
+          {% elif request.url.path == '/' or request.url.path.startswith('/login') %}
+            · <a class="brand-small__link" href="/admin">Entrar no painel</a>
           {% endif %}
         </span>
       </div>

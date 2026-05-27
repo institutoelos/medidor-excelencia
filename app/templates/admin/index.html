@@ -35,8 +35,8 @@
 
 {% for empresa in empresas %}
   <div class="card" style="margin-bottom:16px;">
-    <details {% if loop.first %}open{% endif %}>
-      <summary style="cursor:pointer; list-style: none; display:flex; justify-content: space-between; align-items: flex-start; gap:16px;">
+    <details {% if loop.first and empresa.rodadas %}open{% endif %}>
+      <summary class="empresa-summary">
         <div>
           <h2 class="serif" style="margin-bottom: 4px;">{{ empresa.nome }}</h2>
           <p class="eyebrow" style="margin:0;">
@@ -46,11 +46,14 @@
             {% if empresa.areas_lista() %} · {{ empresa.areas_lista() | length }} áreas{% endif %}
           </p>
         </div>
-        <form method="post" action="/admin/empresas/{{ empresa.id }}/rodadas" onsubmit="return confirm('Abrir nova rodada para {{ empresa.nome }}?')">
-          <select class="select" name="tipo" style="width:auto; display:inline-block;">
-            {% for t in tipos_rodada %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
-          </select>
-          <button class="btn" type="submit">Abrir rodada</button>
+        <form method="post" action="/admin/empresas/{{ empresa.id }}/rodadas" onsubmit="return confirm('Iniciar nova rodada de {{ empresa.nome }}?')" class="empresa-new-round">
+          <label class="empresa-new-round__label">
+            <span class="eyebrow">Tipo da nova rodada</span>
+            <select class="select" name="tipo">
+              {% for t in tipos_rodada %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+            </select>
+          </label>
+          <button class="btn" type="submit">Iniciar nova rodada</button>
         </form>
       </summary>
 

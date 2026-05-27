@@ -133,10 +133,20 @@
     const pct = Math.round((answered / questionSteps.length) * 100);
     if (progressBar) progressBar.style.width = pct + "%";
 
-    // Counter (pilar + posição)
+    // Counter (pilar + posição). Mensagem contextual quando faltam respostas.
     const stepEl = steps[current];
     if (pilarLabel && stepEl) pilarLabel.textContent = pilarOf(stepEl);
-    if (counter) counter.textContent = `${pct}% completo`;
+    if (counter) {
+      const stepType = stepEl && stepEl.dataset.stepType;
+      if (stepType !== "final" && stepType !== "marker" && stepEl && !isStepAnswered(stepEl)) {
+        if (stepType === "demo") counter.textContent = "Preencha os campos pra continuar";
+        else if (stepType === "retencao") counter.textContent = "Escolha uma opção pra continuar";
+        else if (stepType === "nps") counter.textContent = "Escolha um número de 0 a 10";
+        else counter.textContent = "Escolha uma opção pra continuar";
+      } else {
+        counter.textContent = `${pct}% completo`;
+      }
+    }
 
     // Marca checked nos radios pra estilo
     form.querySelectorAll("input[type=radio]").forEach((el) => {
