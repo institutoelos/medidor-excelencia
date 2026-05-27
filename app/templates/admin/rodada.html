@@ -49,10 +49,10 @@
 
   <div style="margin-top:24px; padding-top:16px; border-top: 0.5px solid var(--hairline);" id="parciais-block">
     {% if parciais.parciais_sao_relevantes and parciais.parciais %}
-      <p class="eyebrow">Métricas parciais (Top 2 Box · colaboradores)</p>
+      <p class="eyebrow">Prévia das notas (apenas time, escala 0–100)</p>
       <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top:8px;">
         <div>
-          <div class="muted" style="font-size:11px;">Medidor parcial</div>
+          <div class="muted" style="font-size:11px;">Medidor geral</div>
           <div style="font-family: var(--font-display); font-size: 28px;" id="medidor-parcial">{{ parciais.parciais.medidor }}</div>
         </div>
         {% for p, label in [("cultura", "Cultura"), ("educacao", "Educação"), ("feedback", "Feedback")] %}
@@ -62,17 +62,17 @@
           </div>
         {% endfor %}
       </div>
-      <p class="muted" style="font-size:11px; margin-top:8px;">Parciais valem apenas para acompanhamento operacional. O relatório oficial só sai com a rodada fechada.</p>
+      <p class="muted" style="font-size:11px; margin-top:8px;">Prévia operacional — só vira relatório oficial depois que você fechar a coleta.</p>
     {% else %}
-      <p class="muted" style="font-size:13px;">Aguardando 5+ respondentes para mostrar métricas parciais (preservação de anonimato).</p>
+      <p class="muted" style="font-size:13px;">A prévia das notas aparece quando 5+ pessoas responderem (regra de anonimato).</p>
     {% endif %}
   </div>
 </div>
 
 {# ── Links de formulário ──────────────────────────────────────── #}
 <div class="card" style="margin-bottom:16px;">
-  <h2 class="serif">Links da rodada</h2>
-  <p class="muted" style="font-size:13px;">Compartilhe os dois links separadamente. Cada link mantém o respondente anônimo via cookie.</p>
+  <h2 class="serif">Links para compartilhar</h2>
+  <p class="muted" style="font-size:13px;">Mande o link <strong>de colaborador</strong> para cada pessoa do time (WhatsApp, e-mail ou QR code). Mande o link <strong>de sócio</strong> só para os sócios/empresários. Cada respondente é registrado anonimamente via cookie.</p>
 
   <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top:16px;">
     {% for kind, link in [("Colaborador", link_colab), ("Sócio / Empresário", link_socio)] %}
