@@ -57,17 +57,19 @@
         </form>
       </summary>
 
-      {# Form de edição básica #}
-      <form method="post" action="/admin/empresas/{{ empresa.id }}/editar" style="margin-top:14px; padding-top:14px; border-top: 0.5px solid var(--hairline);">
-        <p class="eyebrow" style="margin-top:0;">Editar empresa</p>
-        <div style="display:grid; grid-template-columns: 2fr 2fr 1fr 1fr; gap:8px; margin-bottom:10px;">
-          <input class="textinput" name="nome" value="{{ empresa.nome }}" required>
-          <input class="textinput" name="areas" value="{{ empresa.lista_de_areas or '' }}" placeholder="áreas separadas por vírgula">
-          <input class="textinput" type="number" min="1" name="tamanho_time_esperado" value="{{ empresa.tamanho_time_esperado or '' }}" placeholder="esperado">
-          <input class="textinput" type="number" min="1" name="qtd_socios_esperados" value="{{ empresa.qtd_socios_esperados or 1 }}">
-        </div>
-        <button class="btn btn--ghost" type="submit" style="font-size:12px; padding:8px 16px;">Salvar alterações</button>
-      </form>
+      {# Form de edição básica (collapsed por default — só abre se quiser editar) #}
+      <details class="empresa-editar">
+        <summary class="empresa-editar__summary"><span class="eyebrow">Editar dados da empresa</span></summary>
+        <form method="post" action="/admin/empresas/{{ empresa.id }}/editar" style="margin-top:12px;">
+          <div style="display:grid; grid-template-columns: 2fr 2fr 1fr 1fr; gap:8px; margin-bottom:10px;">
+            <input class="textinput" name="nome" value="{{ empresa.nome }}" required>
+            <input class="textinput" name="areas" value="{{ empresa.lista_de_areas or '' }}" placeholder="áreas separadas por vírgula">
+            <input class="textinput" type="number" min="1" name="tamanho_time_esperado" value="{{ empresa.tamanho_time_esperado or '' }}" placeholder="time esperado (colab)">
+            <input class="textinput" type="number" min="1" name="qtd_socios_esperados" value="{{ empresa.qtd_socios_esperados or 1 }}" placeholder="sócios">
+          </div>
+          <button class="btn btn--ghost" type="submit" style="font-size:12px; padding:8px 16px;">Salvar alterações</button>
+        </form>
+      </details>
 
       {% if empresa.rodadas %}
         <table class="std" style="margin-top:16px;">

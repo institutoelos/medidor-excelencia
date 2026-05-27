@@ -389,6 +389,29 @@ details[open] .empresa-summary::after { transform: rotate(180deg); }
   padding: 9px 12px;
 }
 .empresa-new-round .btn { white-space: nowrap; }
+
+.empresa-editar {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 0.5px solid var(--hairline);
+}
+.empresa-editar__summary {
+  cursor: pointer;
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+.empresa-editar__summary::-webkit-details-marker { display: none; }
+.empresa-editar__summary::before {
+  content: "▸";
+  color: var(--ink-muted);
+  font-size: 10px;
+  transition: transform .15s ease;
+}
+.empresa-editar[open] .empresa-editar__summary::before { transform: rotate(90deg); }
+.empresa-editar__summary:hover .eyebrow { color: var(--ink); }
 .btn--copper {
   background: var(--copper);
   border-color: var(--copper);
