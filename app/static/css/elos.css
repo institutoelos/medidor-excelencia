@@ -865,11 +865,13 @@ table.std th { color: var(--ink-dim); font-weight: 600; font-size: 12px; text-tr
   border-top: 0.5px solid var(--hairline);
 }
 .wizard__nav .btn { min-height: 44px; }
-.wizard__nav .btn:disabled {
+.wizard__nav .btn:disabled,
+.wizard__nav .btn.btn--inactive {
   opacity: 0.38;
   cursor: not-allowed;
   transform: none;
 }
+.wizard__nav .btn.btn--inactive:hover { transform: none; }
 .wizard__nav .btn[hidden] { display: none !important; }
 .wizard__counter {
   text-align: center;

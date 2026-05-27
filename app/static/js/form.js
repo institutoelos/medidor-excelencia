@@ -158,12 +158,15 @@
     // Back disabled na primeira step
     if (back) back.disabled = current === 0;
 
-    // Next disabled se step atual não respondida
+    // Next visualmente desabilitado quando step atual não respondida — mas
+    // o click ainda dispara (e mostra shake/microcopy) pra dar feedback.
     if (next) {
       const stepNow = steps[current];
       const isFinal = stepNow && stepNow.dataset.stepType === "final";
       next.hidden = isFinal;
-      next.disabled = !isStepAnswered(stepNow);
+      const unanswered = !isStepAnswered(stepNow);
+      next.classList.toggle("btn--inactive", unanswered);
+      next.setAttribute("aria-disabled", unanswered ? "true" : "false");
     }
 
     localStorage.setItem(stepKey, String(current));
