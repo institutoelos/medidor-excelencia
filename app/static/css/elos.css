@@ -118,7 +118,7 @@ footer.app {
 /* ── Formulário ─────────────────────────────────── */
 .form-hero {
   background: var(--card);
-  border: 1.5px solid var(--hairline-strong);
+  border: 0.5px solid var(--hairline);
   border-radius: var(--r-lg);
   padding: 36px 32px;
   margin-bottom: 32px;

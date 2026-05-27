@@ -79,7 +79,8 @@
   }
 
   // ── Animação de transição
-  function showStep(idx, direction) {
+  // skipScroll=true na primeira renderização pra não pular o form-hero
+  function showStep(idx, direction, skipScroll) {
     const prev = steps.find((s) => !s.hidden);
     const target = steps[idx];
     if (!target) return;
@@ -106,7 +107,9 @@
           setTimeout(() => firstInput.focus({ preventScroll: false }), 50);
         }
       }
-      target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+      if (!skipScroll) {
+        target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+      }
     }
 
     if (prev && !reduceMotion) {
@@ -153,9 +156,7 @@
       next.disabled = !isStepAnswered(stepNow);
     }
 
-    // Persiste step e respostas
     localStorage.setItem(stepKey, String(current));
-    persistAnswers();
   }
 
   function persistAnswers() {
@@ -274,6 +275,10 @@
   });
 
   // ── Boot
-  showStep(current, "forward");
+  // Se não tem progresso salvo, fica na step 0 SEM rolar — usuário precisa
+  // ler o form-hero (boas-vindas, confidencialidade) antes de começar.
+  // Se tem progresso, rola direto pra onde parou.
+  const hasSavedProgress = !!localStorage.getItem(stepKey) || Object.keys(saved).length > 0;
+  showStep(current, "forward", !hasSavedProgress);
   updateUI();
 })();
