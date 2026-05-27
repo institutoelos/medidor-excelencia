@@ -787,6 +787,7 @@ table.std th { color: var(--ink-dim); font-weight: 600; font-size: 12px; text-tr
   cursor: not-allowed;
   transform: none;
 }
+.wizard__nav .btn[hidden] { display: none !important; }
 .wizard__counter {
   text-align: center;
   font-size: 12px;
