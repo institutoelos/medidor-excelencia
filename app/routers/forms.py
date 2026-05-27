@@ -151,8 +151,8 @@ async def submit_form_colab(token: str, request: Request, db: Session = Depends(
     for num, *_ in ITENS_COLABORADOR:
         if not form.get(f"item_{num}"):
             raise HTTPException(status_code=400, detail=f"Item {num} obrigatório.")
-    for campo in ("ancora", "nps", "retencao", "tempo_de_casa", "tipo_de_cargo", "area"):
-        if not form.get(campo):
+    for campo in ("ancora", "nps", "retencao", "tempo_de_casa", "tipo_de_cargo", "area", "lider_direto"):
+        if not (form.get(campo) or "").strip():
             raise HTTPException(status_code=400, detail=f"Campo {campo} obrigatório.")
     # Outro motivo obrigatório se marcou "outro"
     if form.get("retencao") == "outro" and not (form.get("retencao_outro") or "").strip():
@@ -163,6 +163,7 @@ async def submit_form_colab(token: str, request: Request, db: Session = Depends(
         tempo_de_casa=form.get("tempo_de_casa"),
         tipo_de_cargo=form.get("tipo_de_cargo"),
         area=form.get("area"),
+        lider_direto=(form.get("lider_direto") or "").strip(),
         finalizado_em=datetime.utcnow(),
     )
     db.add(respondente)
