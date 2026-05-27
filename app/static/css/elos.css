@@ -207,6 +207,7 @@ footer.app {
   border-radius: var(--r-md);
   padding: 20px 22px;
   margin-bottom: 14px;
+  scroll-margin-top: 130px;
 }
 .item__num {
   font-size: 11px;
@@ -677,3 +678,71 @@ table.std th { color: var(--ink-dim); font-weight: 600; font-size: 12px; text-tr
   padding-bottom: 1px;
 }
 .brand-small__link:hover { color: var(--ink); border-color: var(--ink); }
+
+/* ============== Mobile ============== */
+@media (max-width: 640px) {
+  main { padding: 24px 14px 64px; }
+
+  .topbar__inner {
+    padding: 10px 14px;
+    gap: 10px;
+  }
+  .brand { font-size: 15px; }
+  .brand-bar__sigil { width: 32px; height: 32px; }
+  .brand-small {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    line-height: 1.25;
+    text-align: right;
+    max-width: 140px;
+  }
+
+  .form-hero {
+    padding: 22px 18px;
+    margin-bottom: 20px;
+  }
+  .form-hero h1 { font-size: 24px; }
+  .form-hero p { font-size: 14px; }
+
+  .confid-strip { font-size: 12px; padding: 10px 12px; }
+
+  .progress-sticky {
+    padding: 10px 14px 12px;
+    margin: 0 -14px 16px;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    top: 50px;
+  }
+  .progress-sticky .info {
+    width: 100%;
+    justify-content: space-between;
+    font-size: 11px;
+    gap: 10px;
+  }
+  .progress-sticky #time-label,
+  .progress-sticky #pilar-label { display: none; }
+
+  .item {
+    padding: 16px 14px;
+    scroll-margin-top: 110px;
+  }
+  .item__num { font-size: 10px; }
+  .item__texto { font-size: 15px; margin-bottom: 14px; }
+
+  .likert { gap: 4px; }
+  .likert__opt {
+    padding: 10px 2px;
+    font-size: 10.5px;
+    line-height: 1.2;
+    gap: 3px;
+  }
+  .likert__opt strong { font-size: 15px; }
+
+  .nps-grid { gap: 3px; }
+  .nps-grid label { padding: 10px 0; font-size: 13px; }
+
+  .section-title { font-size: 18px; margin-top: 28px; }
+
+  .actions { justify-content: stretch; }
+  .actions .btn { flex: 1; justify-content: center; }
+}

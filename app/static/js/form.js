@@ -31,7 +31,7 @@
   }
   updateUI();
 
-  form.addEventListener("change", () => {
+  form.addEventListener("change", (ev) => {
     const data = new FormData(form);
     const out = {};
     data.forEach((v, k) => { out[k] = v; });
@@ -40,6 +40,23 @@
       savedPill.textContent = "Salvo automaticamente · " + new Date().toLocaleTimeString("pt-BR", {hour: "2-digit", minute: "2-digit"});
     }
     updateUI();
+
+    // Auto-avanço: ao marcar Likert ou NPS, rola pro próximo .item.
+    // (não dispara em retencao/demos pra não atrapalhar o "Outro" textfield e os selects).
+    const tgt = ev.target;
+    if (tgt && tgt.type === "radio" && tgt.closest(".likert__opt, .nps-grid")) {
+      const currentItem = tgt.closest(".item");
+      if (currentItem) {
+        const items = Array.from(form.querySelectorAll(".item"));
+        const idx = items.indexOf(currentItem);
+        const next = items[idx + 1];
+        if (next) {
+          setTimeout(() => {
+            next.scrollIntoView({ behavior: "smooth", block: "start" });
+          }, 220);
+        }
+      }
+    }
   });
 
   function updateUI() {
