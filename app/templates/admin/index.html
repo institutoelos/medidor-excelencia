@@ -2,36 +2,30 @@
 {% block title %}Painel — Medidor de Excelência{% endblock %}
 {% block content %}
 
-<section class="form-hero">
-  <p class="eyebrow">Painel ELO Business</p>
-  <h1 class="serif">Empresas e rodadas</h1>
-  <p>Acompanhe diagnósticos em andamento, abra rodadas, gere relatórios.</p>
+<section class="admin-hero">
+  <div>
+    <p class="eyebrow">Painel ELO Business</p>
+    <h1 class="serif">Empresas e rodadas</h1>
+  </div>
+  <div class="admin-hero__count">
+    {% if empresas %}
+      <strong>{{ empresas | length }}</strong>
+      empresa{{ 's' if empresas | length != 1 else '' }} cadastrada{{ 's' if empresas | length != 1 else '' }}
+    {% else %}
+      Nenhuma empresa ainda — cadastre a primeira abaixo.
+    {% endif %}
+  </div>
 </section>
 
-<div class="card" style="margin-bottom:16px;">
+{% if empresas | length > 3 or q %}
+<div class="card admin-search">
   <form method="get" action="/admin" style="display:flex; gap:12px;">
     <input class="textinput" name="q" value="{{ q }}" placeholder="Buscar empresa pelo nome…" style="flex:1;">
     <button class="btn btn--ghost" type="submit">Buscar</button>
     {% if q %}<a class="btn btn--ghost" href="/admin">Limpar</a>{% endif %}
   </form>
 </div>
-
-<div class="card" style="margin-bottom:24px;">
-  <h2 class="serif">Nova empresa</h2>
-  <form method="post" action="/admin/empresas">
-    <div style="display:grid; grid-template-columns: 2fr 3fr; gap:12px; margin-bottom:12px;">
-      <input class="textinput" name="nome" placeholder="Nome da empresa" required>
-      <input class="textinput" name="areas" placeholder="Áreas (separadas por vírgula). Ex.: comercial, financeiro, operações">
-    </div>
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
-      <input class="textinput" type="number" min="1" name="tamanho_time_esperado" placeholder="Tamanho esperado do time (colab)">
-      <input class="textinput" type="number" min="1" name="qtd_socios_esperados" placeholder="Qtd. de sócios esperados (default 1)" value="1">
-    </div>
-    <div class="actions" style="margin:0;">
-      <button class="btn btn--copper" type="submit">Cadastrar empresa</button>
-    </div>
-  </form>
-</div>
+{% endif %}
 
 {% for empresa in empresas %}
   <div class="card" style="margin-bottom:16px;">
@@ -90,7 +84,7 @@
                 Colab: <strong>{{ c.colab or 0 }}{% if c.colab_esperado %} / {{ c.colab_esperado }}{% endif %}</strong>
                 {% if c.colab_pct is not none %} ({{ c.colab_pct }}%){% endif %}<br>
                 Sócios: <strong>{{ c.socio or 0 }}{% if c.socio_esperado %} / {{ c.socio_esperado }}{% endif %}</strong>
-                {% if c.ult_24h_colab or c.ult_24h_socio %}<br><span class="muted" style="font-size:11px;">últimas 24h: +{{ c.ult_24h_colab + c.ult_24h_socio }}</span>{% endif %}
+                {% if c.ult_24h_colab or c.ult_24h_socio %}<br><span class="muted" style="font-size:11px;">+{{ c.ult_24h_colab + c.ult_24h_socio }} respostas nas últimas 24h</span>{% endif %}
               </td>
               <td data-label="Parcial">
                 {% if p.parciais_sao_relevantes and p.parciais %}
@@ -103,8 +97,8 @@
               </td>
               <td data-label="Ações">
                 <div style="display:flex; gap:6px; flex-wrap: wrap;">
-                  <a class="btn btn--ghost" href="/admin/rodadas/{{ r.id }}" style="font-size:12px; padding:6px 12px;">Detalhes</a>
-                  <a class="btn btn--copper" href="/relatorio/{{ r.id }}" target="_blank" style="font-size:12px; padding:6px 12px;">Relatório</a>
+                  <a class="btn btn--ghost" href="/admin/rodadas/{{ r.id }}" style="font-size:12px; padding:6px 12px;">Painel da rodada</a>
+                  <a class="btn btn--copper" href="/relatorio/{{ r.id }}" target="_blank" style="font-size:12px; padding:6px 12px;">Ver relatório</a>
                 </div>
               </td>
             </tr>
@@ -118,13 +112,29 @@
   </div>
 {% endfor %}
 
-{% if not empresas %}
-  {% if q %}
-    <div class="flash flash--info">Nenhuma empresa encontrada para "{{ q }}".</div>
-  {% else %}
-    <div class="flash flash--info">Nenhuma empresa cadastrada. Use o formulário acima para começar.</div>
-  {% endif %}
+{% if not empresas and q %}
+  <div class="flash flash--info">Nenhuma empresa encontrada para "{{ q }}".</div>
 {% endif %}
+
+<details class="card admin-nova-empresa" {% if not empresas and not q %}open{% endif %}>
+  <summary class="admin-nova-empresa__summary">
+    <h2 class="serif" style="margin:0;">Cadastrar nova empresa</h2>
+    <span class="muted" style="font-size:13px;">Clique para abrir o formulário</span>
+  </summary>
+  <form method="post" action="/admin/empresas" style="margin-top:16px;">
+    <div style="display:grid; grid-template-columns: 2fr 3fr; gap:12px; margin-bottom:12px;">
+      <input class="textinput" name="nome" placeholder="Nome da empresa" required>
+      <input class="textinput" name="areas" placeholder="Áreas (separadas por vírgula). Ex.: comercial, financeiro, operações">
+    </div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+      <input class="textinput" type="number" min="1" name="tamanho_time_esperado" placeholder="Tamanho esperado do time (colab)">
+      <input class="textinput" type="number" min="1" name="qtd_socios_esperados" placeholder="Qtd. de sócios esperados (default 1)" value="1">
+    </div>
+    <div class="actions" style="margin:0;">
+      <button class="btn btn--copper" type="submit">Cadastrar empresa</button>
+    </div>
+  </form>
+</details>
 
 <style>
   details summary::-webkit-details-marker { display: none; }
