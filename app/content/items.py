@@ -230,11 +230,11 @@ def todos_itens_socio():
 
 # Escala Likert
 LIKERT_OPCOES = [
-    (1, "Nunca verdadeiro"),
-    (2, "Raramente verdadeiro"),
-    (3, "Às vezes verdadeiro"),
-    (4, "Quase sempre verdadeiro"),
-    (5, "Sempre verdadeiro"),
+    (1, "Nunca"),
+    (2, "Raramente"),
+    (3, "Às vezes"),
+    (4, "Quase sempre"),
+    (5, "Sempre"),
 ]
 
 

@@ -5,81 +5,82 @@
 <section class="form-hero">
   <p class="eyebrow">Diagnóstico do Pilar Pessoas — Versão Colaborador</p>
   <h1 class="serif">{{ empresa.nome }}</h1>
-  <p>Esse diagnóstico é parte do programa <strong>ELO Business</strong> — Programa de Excelência Empresarial, contratado pela sua empresa. Suas respostas são <strong>individualmente confidenciais</strong>. Você pode pausar e voltar — o sistema salva seu progresso neste navegador automaticamente.</p>
+  <p>
+    Esse diagnóstico é parte do programa <strong>ELO Business</strong>. Suas respostas individuais
+    são <strong>confidenciais</strong> — o relatório só mostra dados agregados, e qualquer recorte
+    com menos de 5 pessoas é suprimido. Dá pra pausar e voltar quando quiser; seu progresso fica
+    salvo automaticamente neste navegador.
+  </p>
 </section>
-
-<div class="confid-strip">
-  <strong>Como tratamos seus dados:</strong> respostas individuais não são compartilhadas com a empresa. O relatório final mostra apenas dados agregados, e qualquer recorte com menos de <strong>5 respondentes</strong> é suprimido para preservar seu anonimato.
-</div>
 
 <div class="progress-sticky">
   <div class="progress-bar"><div class="progress-bar__fill"></div></div>
   <div class="info">
-    <span><strong id="progress-label">0%</strong></span>
-    <span id="time-label">Estimativa: ~12 min (média histórica)</span>
-  </div>
-  <div class="info">
     <span class="eyebrow" id="pilar-label">Início</span>
-    <span class="saved-pill" id="saved-pill">aguardando primeira resposta</span>
+    <span class="saved-pill" id="saved-pill">progresso salvo automaticamente</span>
   </div>
 </div>
 
-<form id="form-medidor" method="post" action="/f/colab/{{ token }}/enviar" data-storage-key="medidor-colab-{{ token }}">
+<form id="form-medidor" class="wizard" method="post" action="/f/colab/{{ token }}/enviar" data-storage-key="medidor-colab-{{ token }}">
 
+  {# ──────────────────── Steps de Likert (itens 1..58) ──────────────────── #}
   {% for pilar_codigo, pilar_label, subpilares in itens_agrupados %}
-    <h2 class="section-title serif" data-pilar="{{ pilar_label }}">{{ pilar_label }}</h2>
-    <p class="section-sub">Para cada afirmação, marque a opção que melhor descreve a sua vivência nesta empresa hoje. <strong>{{ subpilares | sum(attribute=2, start=[]) | length }} itens</strong> nesta seção.</p>
-
     {% for sub_codigo, sub_label, itens in subpilares %}
-      <p class="eyebrow" style="margin-top:24px;">{{ sub_label }} · {{ itens | length }} itens</p>
       {% for num, texto in itens %}
-        <div class="item">
-          <div class="item__num">Item {{ num }} de 58</div>
-          <div class="item__texto">{{ texto }}</div>
-          <div class="likert">
+        <section class="step" data-step-type="likert" data-step-name="item_{{ num }}" data-pilar="{{ pilar_label }}" aria-labelledby="step-title-{{ num }}" hidden>
+          <p class="step__eyebrow eyebrow">{{ pilar_label }} · {{ sub_label }}</p>
+          <h2 class="serif step__title" id="step-title-{{ num }}">{{ texto }}</h2>
+          <p class="step__hint">Em uma escala de 1 a 5, quanto isso é verdade na sua vivência hoje?</p>
+          <div class="likert likert--wizard" role="radiogroup" aria-labelledby="step-title-{{ num }}">
             {% for v, rotulo in likert %}
-              <label class="likert__opt">
+              <label class="likert__opt" data-key="{{ v }}">
                 <input type="radio" name="item_{{ num }}" value="{{ v }}">
                 <strong>{{ v }}</strong>
                 <span>{{ rotulo }}</span>
               </label>
             {% endfor %}
           </div>
-        </div>
+          <p class="step__shortcut">Atalho: pressione <kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd>, <kbd>4</kbd> ou <kbd>5</kbd> no teclado.</p>
+        </section>
       {% endfor %}
     {% endfor %}
   {% endfor %}
 
-  <h2 class="section-title serif" data-pilar="Pergunta síntese">Pergunta síntese</h2>
-  <p class="section-sub">Levando tudo em conta agora.</p>
-  <div class="item">
-    <div class="item__texto">{{ ancora_texto }}</div>
-    <div class="likert">
+  {# ──────────────────── Step da Âncora (síntese) ──────────────────── #}
+  <section class="step" data-step-type="likert" data-step-name="ancora" data-pilar="Síntese" aria-labelledby="step-title-ancora" hidden>
+    <p class="step__eyebrow eyebrow">Quase lá · Pergunta síntese</p>
+    <h2 class="serif step__title" id="step-title-ancora">{{ ancora_texto }}</h2>
+    <p class="step__hint">Levando tudo em conta agora, em uma escala de 1 a 5.</p>
+    <div class="likert likert--wizard" role="radiogroup" aria-labelledby="step-title-ancora">
       {% for v, rotulo in likert %}
-        <label class="likert__opt">
+        <label class="likert__opt" data-key="{{ v }}">
           <input type="radio" name="ancora" value="{{ v }}">
           <strong>{{ v }}</strong>
           <span>{{ rotulo }}</span>
         </label>
       {% endfor %}
     </div>
-  </div>
+    <p class="step__shortcut">Atalho: pressione <kbd>1</kbd> a <kbd>5</kbd>.</p>
+  </section>
 
-  <h2 class="section-title serif" data-pilar="Recomendação">Recomendação</h2>
-  <div class="item">
-    <div class="item__texto">{{ nps_pergunta }}</div>
-    <p class="muted" style="font-size:12px; margin: 0 0 12px;">0 = jamais indicaria · 10 = indicaria com convicção</p>
-    <div class="nps-grid">
+  {# ──────────────────── Step NPS ──────────────────── #}
+  <section class="step" data-step-type="nps" data-step-name="nps" data-pilar="Recomendação" aria-labelledby="step-title-nps" hidden>
+    <p class="step__eyebrow eyebrow">Recomendação</p>
+    <h2 class="serif step__title" id="step-title-nps">{{ nps_pergunta }}</h2>
+    <p class="step__hint">0 = jamais indicaria · 10 = indicaria com convicção</p>
+    <div class="nps-grid" role="radiogroup" aria-labelledby="step-title-nps">
       {% for n in range(0, 11) %}
-        <label><input type="radio" name="nps" value="{{ n }}">{{ n }}</label>
+        <label data-key="{{ n }}"><input type="radio" name="nps" value="{{ n }}">{{ n }}</label>
       {% endfor %}
     </div>
-  </div>
+  </section>
 
-  <h2 class="section-title serif" data-pilar="Permanência">Permanência</h2>
-  <div class="item">
-    <div class="item__texto">{{ retencao_pergunta }}</div>
-    <ul class="opt-list">
+  {# ──────────────────── Step Retenção ──────────────────── #}
+  <section class="step" data-step-type="retencao" data-step-name="retencao" data-pilar="Permanência" aria-labelledby="step-title-retencao" hidden>
+    <p class="step__eyebrow eyebrow">E você por aqui</p>
+    <h2 class="serif step__title" id="step-title-retencao">{{ retencao_pergunta }}</h2>
+    <p class="step__hint">Escolha a opção que mais te representa hoje.</p>
+    <ul class="opt-list" role="radiogroup" aria-labelledby="step-title-retencao">
       {% for codigo, label in retencao_opcoes %}
         <li>
           <label>
@@ -89,54 +90,77 @@
         </li>
       {% endfor %}
     </ul>
-    <div style="margin-top:12px;">
-      <label class="eyebrow" for="retencao_outro">Descreva o motivo (obrigatório se marcou "Outro"):</label>
-      <input type="text" class="textinput" id="retencao_outro" name="retencao_outro" placeholder="(opcional)">
+    <div class="retencao-outro" hidden>
+      <label class="eyebrow" for="retencao_outro">Descreva o motivo</label>
+      <input type="text" class="textinput" id="retencao_outro" name="retencao_outro" placeholder="O que sustenta sua permanência hoje?">
     </div>
+  </section>
+
+  {# ──────────────────── Step Demografia (4 campos agrupados) ──────────────────── #}
+  <section class="step" data-step-type="demo" data-step-name="demo" data-pilar="Sobre você" aria-labelledby="step-title-demo" hidden>
+    <p class="step__eyebrow eyebrow">Última etapa</p>
+    <h2 class="serif step__title" id="step-title-demo">Sobre você</h2>
+    <p class="step__hint">Usado apenas para cortes agregados. Recortes com menos de 5 respondentes são suprimidos.</p>
+
+    <div class="demo-stack">
+      <label class="demo-field">
+        <span class="demo-field__label">Tempo de casa</span>
+        <select class="select" name="tempo_de_casa" required>
+          <option value="">Selecione…</option>
+          {% for codigo, label in demo_tempo %}
+            <option value="{{ codigo }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label class="demo-field">
+        <span class="demo-field__label">Tipo de cargo</span>
+        <select class="select" name="tipo_de_cargo" required>
+          <option value="">Selecione…</option>
+          {% for codigo, label in demo_cargo %}
+            <option value="{{ codigo }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label class="demo-field">
+        <span class="demo-field__label">Área de trabalho</span>
+        {% if empresa.areas_lista() %}
+          <select class="select" name="area" required>
+            <option value="">Selecione…</option>
+            {% for a in empresa.areas_lista() %}
+              <option value="{{ a }}">{{ a }}</option>
+            {% endfor %}
+          </select>
+        {% else %}
+          <input type="text" class="textinput" name="area" placeholder="Ex.: comercial, financeiro…" required>
+        {% endif %}
+      </label>
+
+      <label class="demo-field">
+        <span class="demo-field__label">Líder direto</span>
+        <input type="text" class="textinput" name="lider_direto" placeholder="Nome de quem é seu líder direto hoje" required>
+        <span class="demo-field__hint">Pra agrupar leituras por cohort. Seu nome continua confidencial.</span>
+      </label>
+    </div>
+  </section>
+
+  {# ──────────────────── Step de envio ──────────────────── #}
+  <section class="step step--final" data-step-type="final" data-step-name="final" data-pilar="Revisar" aria-labelledby="step-title-final" hidden>
+    <p class="step__eyebrow eyebrow">Tudo pronto</p>
+    <h2 class="serif step__title" id="step-title-final">Suas respostas estão prontas pra enviar</h2>
+    <p class="step__hint">Volte e revise se quiser. Depois de enviar, não dá mais pra editar.</p>
+    <button type="submit" class="btn btn--copper btn--full">Enviar diagnóstico</button>
+  </section>
+
+  {# ──────────────────── Footer fixo do wizard ──────────────────── #}
+  <div class="wizard__nav" role="group" aria-label="Navegação do questionário">
+    <button type="button" class="btn btn--ghost" id="wiz-back" aria-label="Voltar para a pergunta anterior">← Voltar</button>
+    <span class="wizard__counter" id="wiz-counter" aria-live="polite"></span>
+    <button type="button" class="btn btn--copper" id="wiz-next">Continuar →</button>
   </div>
 
-  <h2 class="section-title serif" data-pilar="Sobre você">Sobre você</h2>
-  <p class="section-sub">Usado apenas para cruzar dados agregados no relatório. Recortes com menos de 5 respondentes são suprimidos.</p>
-  <div class="item">
-    <label class="eyebrow" for="tempo_de_casa">Tempo de casa</label>
-    <select class="select" id="tempo_de_casa" name="tempo_de_casa" required>
-      <option value="">Selecione…</option>
-      {% for codigo, label in demo_tempo %}
-        <option value="{{ codigo }}">{{ label }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <div class="item">
-    <label class="eyebrow" for="tipo_de_cargo">Tipo de cargo</label>
-    <select class="select" id="tipo_de_cargo" name="tipo_de_cargo" required>
-      <option value="">Selecione…</option>
-      {% for codigo, label in demo_cargo %}
-        <option value="{{ codigo }}">{{ label }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <div class="item">
-    <label class="eyebrow" for="area">Área de trabalho</label>
-    {% if empresa.areas_lista() %}
-      <select class="select" id="area" name="area" required>
-        <option value="">Selecione…</option>
-        {% for a in empresa.areas_lista() %}
-          <option value="{{ a }}">{{ a }}</option>
-        {% endfor %}
-      </select>
-    {% else %}
-      <input type="text" class="textinput" id="area" name="area" placeholder="Ex.: comercial, financeiro…" required>
-    {% endif %}
-  </div>
-  <div class="item">
-    <label class="eyebrow" for="lider_direto">Líder direto</label>
-    <input type="text" class="textinput" id="lider_direto" name="lider_direto" placeholder="Nome de quem é seu líder direto hoje" required>
-    <p class="muted" style="font-size:11px; margin: 6px 0 0;">Usado para agrupar leituras por cohort de liderança no relatório. Continua confidencial — o nome do seu líder não vai junto da sua resposta individual.</p>
-  </div>
-
-  <div class="actions">
-    <button type="submit" class="btn btn--copper">Enviar respostas</button>
-  </div>
+  <div class="wizard__live" id="wiz-live" aria-live="polite" aria-atomic="true"></div>
 </form>
 
 {% endblock %}
