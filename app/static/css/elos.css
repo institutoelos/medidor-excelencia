@@ -958,4 +958,54 @@ table.std th { color: var(--ink-dim); font-weight: 600; font-size: 12px; text-tr
   .wizard__nav { padding: 10px 14px; gap: 10px; }
   .wizard__nav .btn { padding: 12px 18px; font-size: 13px; }
   .wizard__counter { font-size: 10.5px; }
+
+  /* Admin: container e cards menos espremidos */
+  .card { padding: 16px 14px; }
+  .card h2 { font-size: 20px; }
+
+  /* Admin: grids inline 2-4 colunas viram coluna única */
+  .grid-stack-mobile { grid-template-columns: 1fr !important; }
+  .card form > div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+  .card form[style*="display:flex"] { flex-wrap: wrap; }
+
+  /* Admin: summary do <details> empilha o nome e o "abrir rodada" */
+  .card details > summary {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .card details > summary form { display: flex; gap: 8px; }
+  .card details > summary form select { flex: 1; }
+
+  /* Tabela de rodadas vira lista de cards */
+  table.std, table.std tbody, table.std thead, table.std tr, table.std td, table.std th {
+    display: block;
+    width: 100%;
+    text-align: left;
+  }
+  table.std thead { display: none; }
+  table.std tr {
+    border: 0.5px solid var(--hairline);
+    border-radius: var(--r-sm);
+    background: var(--card-soft);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  table.std td {
+    padding: 6px 0;
+    border-bottom: 0;
+    font-size: 13px;
+  }
+  table.std td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    margin-bottom: 2px;
+    font-weight: 600;
+  }
 }
