@@ -2,7 +2,7 @@
 {% block title %}Rodada {{ rodada.tipo }} — {{ empresa.nome }}{% endblock %}
 {% block content %}
 
-<p class="eyebrow"><a href="/admin" style="color:inherit; text-decoration:none;">← Painel</a></p>
+<p class="eyebrow"><a href="/admin" style="color:inherit; text-decoration:none;">← Voltar para o painel</a></p>
 
 <section class="form-hero">
   <p class="eyebrow">Rodada {{ rodada.tipo }} · {% if rodada.status == "aberta" %}<span style="color:var(--green);">coleta aberta</span>{% else %}<span style="color:var(--ink-dim);">coleta encerrada</span>{% endif %}</p>
@@ -98,20 +98,25 @@
 {# ── Ações ────────────────────────────────────────────────────── #}
 <div class="card" style="margin-bottom:16px;">
   <h2 class="serif">Ações</h2>
-  <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;">
+  <p class="muted" style="font-size:12px; margin: 0 0 16px;">A ação principal é <strong>ver o relatório</strong>. As demais são complementares.</p>
+  <div class="actions-row">
+    <a class="btn btn--copper" href="/relatorio/{{ rodada.id }}" target="_blank">Ver relatório</a>
+    <button class="btn btn--ghost" type="button" id="btn-pdf" onclick="baixarPdf(this, '/relatorio/{{ rodada.id }}/pdf')">Baixar PDF</button>
+    <a class="btn btn--ghost" href="/admin/rodadas/{{ rodada.id }}/export/colab.csv" download>Exportar CSV — colaboradores</a>
+    <a class="btn btn--ghost" href="/admin/rodadas/{{ rodada.id }}/export/socio.csv" download>Exportar CSV — sócios</a>
+  </div>
+  <div class="actions-row actions-row--danger">
     {% if rodada.status == "aberta" %}
       <form method="post" action="/admin/rodadas/{{ rodada.id }}/fechar" style="display:inline;">
-        <button class="btn" type="submit" onclick="return confirm('Fechar a rodada? Novas respostas serão bloqueadas. (Você pode reabrir depois.)')">Fechar coleta</button>
+        <button class="btn btn--danger" type="submit" onclick="return confirm('Fechar a coleta? Novas respostas serão bloqueadas. (Você pode reabrir depois.)')">Fechar coleta</button>
       </form>
+      <span class="muted" style="font-size:12px;">Fecha a coleta — novas respostas ficam bloqueadas. Dá pra reabrir depois.</span>
     {% else %}
       <form method="post" action="/admin/rodadas/{{ rodada.id }}/reabrir" style="display:inline;">
         <button class="btn btn--ghost" type="submit">Reabrir coleta</button>
       </form>
+      <span class="muted" style="font-size:12px;">A coleta está fechada. Reabra se quiser receber mais respostas.</span>
     {% endif %}
-    <a class="btn btn--copper" href="/relatorio/{{ rodada.id }}" target="_blank">Ver relatório (HTML)</a>
-    <button class="btn btn--ghost" type="button" id="btn-pdf" onclick="baixarPdf(this, '/relatorio/{{ rodada.id }}/pdf')">Baixar PDF</button>
-    <a class="btn btn--ghost" href="/admin/rodadas/{{ rodada.id }}/export/colab.csv" download>CSV — colaboradores</a>
-    <a class="btn btn--ghost" href="/admin/rodadas/{{ rodada.id }}/export/socio.csv" download>CSV — sócios</a>
   </div>
 </div>
 

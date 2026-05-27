@@ -79,7 +79,8 @@
   }
 
   // ── Animação de transição
-  function showStep(idx, direction) {
+  // skipScroll=true na primeira renderização pra não pular o form-hero
+  function showStep(idx, direction, skipScroll) {
     const prev = steps.find((s) => !s.hidden);
     const target = steps[idx];
     if (!target) return;
@@ -106,7 +107,9 @@
           setTimeout(() => firstInput.focus({ preventScroll: false }), 50);
         }
       }
-      target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+      if (!skipScroll) {
+        target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+      }
     }
 
     if (prev && !reduceMotion) {
@@ -130,10 +133,20 @@
     const pct = Math.round((answered / questionSteps.length) * 100);
     if (progressBar) progressBar.style.width = pct + "%";
 
-    // Counter (pilar + posição)
+    // Counter (pilar + posição). Mensagem contextual quando faltam respostas.
     const stepEl = steps[current];
     if (pilarLabel && stepEl) pilarLabel.textContent = pilarOf(stepEl);
-    if (counter) counter.textContent = `${pct}% completo`;
+    if (counter) {
+      const stepType = stepEl && stepEl.dataset.stepType;
+      if (stepType !== "final" && stepType !== "marker" && stepEl && !isStepAnswered(stepEl)) {
+        if (stepType === "demo") counter.textContent = "Preencha os campos pra continuar";
+        else if (stepType === "retencao") counter.textContent = "Escolha uma opção pra continuar";
+        else if (stepType === "nps") counter.textContent = "Escolha um número de 0 a 10";
+        else counter.textContent = "Escolha uma opção pra continuar";
+      } else {
+        counter.textContent = `${pct}% completo`;
+      }
+    }
 
     // Marca checked nos radios pra estilo
     form.querySelectorAll("input[type=radio]").forEach((el) => {
@@ -145,17 +158,18 @@
     // Back disabled na primeira step
     if (back) back.disabled = current === 0;
 
-    // Next disabled se step atual não respondida
+    // Next visualmente desabilitado quando step atual não respondida — mas
+    // o click ainda dispara (e mostra shake/microcopy) pra dar feedback.
     if (next) {
       const stepNow = steps[current];
       const isFinal = stepNow && stepNow.dataset.stepType === "final";
       next.hidden = isFinal;
-      next.disabled = !isStepAnswered(stepNow);
+      const unanswered = !isStepAnswered(stepNow);
+      next.classList.toggle("btn--inactive", unanswered);
+      next.setAttribute("aria-disabled", unanswered ? "true" : "false");
     }
 
-    // Persiste step e respostas
     localStorage.setItem(stepKey, String(current));
-    persistAnswers();
   }
 
   function persistAnswers() {
@@ -274,6 +288,10 @@
   });
 
   // ── Boot
-  showStep(current, "forward");
+  // Se não tem progresso salvo, fica na step 0 SEM rolar — usuário precisa
+  // ler o form-hero (boas-vindas, confidencialidade) antes de começar.
+  // Se tem progresso, rola direto pra onde parou.
+  const hasSavedProgress = !!localStorage.getItem(stepKey) || Object.keys(saved).length > 0;
+  showStep(current, "forward", !hasSavedProgress);
   updateUI();
 })();

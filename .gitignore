@@ -12,3 +12,7 @@ data/*.db-journal
 .vscode/
 relatorios_gerados/
 design-handoff/project/screens/
+
+# Claude Code skills — instaladas localmente, fora do versionamento.
+# Pra reinstalar a ui-ux-pro-max: git clone https://github.com/nextlevelbuilder/ui-ux-pro-max-skill /tmp/uipm && mkdir -p .claude/skills/ui-ux-pro-max && cp /tmp/uipm/.claude/skills/ui-ux-pro-max/SKILL.md .claude/skills/ui-ux-pro-max/ && cp -r /tmp/uipm/src/ui-ux-pro-max/scripts .claude/skills/ui-ux-pro-max/scripts && cp -r /tmp/uipm/src/ui-ux-pro-max/data .claude/skills/ui-ux-pro-max/data
+.claude/skills/

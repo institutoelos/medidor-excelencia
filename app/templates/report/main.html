@@ -91,50 +91,61 @@
     {% endfor %}
   {% endif %}
 
-  <div class="medidor-hero">
+  <div class="resumo-hero">
     <div class="medidor-number" style="color: {{ d.faixa.cor }};">
-      <div>
-        <p class="eyebrow muted">Medidor de Excelência</p>
-        <div class="medidor-number__value" style="color: {{ d.faixa.cor }};">{{ fmt(d.medidor) }}</div>
-        <p class="muted" style="margin: 4mm 0 0;">Escala 0–100 · média ponderada dos três pilares</p>
-      </div>
-      <div class="medidor-number__faixa">
-        <span class="medidor-number__dot"></span>
-        <span>{{ d.faixa.leitura }}</span>
-      </div>
+      <p class="eyebrow muted">Medidor de Excelência</p>
+      <div class="medidor-number__value" style="color: {{ d.faixa.cor }};">{{ fmt(d.medidor) }}</div>
+      <p class="muted medidor-number__scale">Escala 0–100 · média ponderada dos três pilares</p>
     </div>
+    <div class="medidor-faixa" style="color: {{ d.faixa.cor }};">
+      <span class="medidor-faixa__dot"></span>
+      <span class="medidor-faixa__text">{{ d.faixa.leitura }}</span>
+    </div>
+  </div>
 
-    <div>
-      <div class="pilares-cards">
-        {% for p in PILARES %}
-          {% set nota = d.notas_pilares_colab[p] %}
-          {% set media = d.pilares_colab[p].media_pilar %}
-          <div class="pilar-card">
-            <div class="pilar-card__label">{{ PILAR_LABEL[p] }}</div>
-            <div class="pilar-card__nota" style="color: {{ cor_pilar(nota) }};">{{ fmt(nota) }}</div>
-            <div class="pilar-card__media">Média 1–5: <strong class="num">{{ fmt(media) }}</strong></div>
-            <div class="pilar-card__bar"><div class="pilar-card__bar-fill" style="width: {{ nota or 0 }}%; background: {{ cor_pilar(nota) }};"></div></div>
-          </div>
-        {% endfor %}
+  <div class="pilares-cards gap-12">
+    {% for p in PILARES %}
+      {% set nota = d.notas_pilares_colab[p] %}
+      {% set media = d.pilares_colab[p].media_pilar %}
+      <div class="pilar-card">
+        <div class="pilar-card__label">{{ PILAR_LABEL[p] }}</div>
+        <div class="pilar-card__nota" style="color: {{ cor_pilar(nota) }};">{{ fmt(nota) }}</div>
+        <div class="pilar-card__media">Média 1–5: <strong class="num">{{ fmt(media) }}</strong></div>
+        <div class="pilar-card__bar"><div class="pilar-card__bar-fill" style="width: {{ nota or 0 }}%; background: {{ cor_pilar(nota) }};"></div></div>
       </div>
+    {% endfor %}
+  </div>
 
-      <div class="metrics-row">
-        <div class="metric">
-          <div class="metric__label">eNPS</div>
-          <div class="metric__value">{{ fmt(d.enps.enps) }}</div>
-          <div class="metric__note">{{ d.enps.promotores }} promotores · {{ d.enps.neutros }} neutros · {{ d.enps.detratores }} detratores ({{ d.enps.total }} respondentes)</div>
-        </div>
-        <div class="metric">
-          <div class="metric__label">Pergunta-âncora (Colab)</div>
-          <div class="metric__value">{{ fmt(d.ancora.colab.top2, "%") }}</div>
-          <div class="metric__note">média {{ fmt(d.ancora.colab.media) }} · {{ d.ancora.colab.n }} respondentes</div>
-        </div>
-        <div class="metric">
-          <div class="metric__label">Pergunta-âncora (Sócio)</div>
-          <div class="metric__value">{{ fmt(d.ancora.socio.top2, "%") }}</div>
-          <div class="metric__note">média {{ fmt(d.ancora.socio.media) }} · {{ d.ancora.socio.n }} respondentes{% if d.ancora.gap is not none %} · gap {{ d.ancora.gap }} p.p.{% endif %}</div>
-        </div>
-      </div>
+  <div class="metrics-row gap-12">
+    <div class="metric">
+      <div class="metric__label">eNPS</div>
+      {% if d.enps.enps is not none %}
+        <div class="metric__value">{{ fmt(d.enps.enps) }}</div>
+        <div class="metric__note">{{ d.enps.promotores }} promotores · {{ d.enps.neutros }} neutros · {{ d.enps.detratores }} detratores ({{ d.enps.total }} respondentes)</div>
+      {% else %}
+        <div class="metric__value metric__value--empty">—</div>
+        <div class="metric__note">Sem respostas registradas ainda.</div>
+      {% endif %}
+    </div>
+    <div class="metric">
+      <div class="metric__label">Pergunta-âncora (Colab)</div>
+      {% if d.ancora.colab.top2 is not none %}
+        <div class="metric__value">{{ fmt(d.ancora.colab.top2, "%") }}</div>
+        <div class="metric__note">média {{ fmt(d.ancora.colab.media) }} · {{ d.ancora.colab.n }} respondentes</div>
+      {% else %}
+        <div class="metric__value metric__value--empty">—</div>
+        <div class="metric__note">Aguardando respostas do time.</div>
+      {% endif %}
+    </div>
+    <div class="metric">
+      <div class="metric__label">Pergunta-âncora (Sócio)</div>
+      {% if d.ancora.socio.top2 is not none %}
+        <div class="metric__value">{{ fmt(d.ancora.socio.top2, "%") }}</div>
+        <div class="metric__note">média {{ fmt(d.ancora.socio.media) }} · {{ d.ancora.socio.n }} respondentes{% if d.ancora.gap is not none %} · gap {{ d.ancora.gap }} p.p.{% endif %}</div>
+      {% else %}
+        <div class="metric__value metric__value--empty">—</div>
+        <div class="metric__note">Aguardando respostas do sócio.</div>
+      {% endif %}
     </div>
   </div>
 
