@@ -150,6 +150,16 @@ footer.app {
   transition: width .25s ease;
 }
 
+.bar-svg-wrap {
+  height: 8px;
+  background: var(--paper-2);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+.bar-svg-wrap > div { max-width: 100%; }
+
 /* Barra sticky de progresso (aparece ao rolar) */
 .progress-sticky {
   position: sticky;
@@ -965,10 +975,28 @@ table.std th { color: var(--ink-dim); font-weight: 600; font-size: 12px; text-tr
 
   /* Admin: grids inline 2-4 colunas viram coluna única */
   .grid-stack-mobile { grid-template-columns: 1fr !important; }
+  .card [style*="grid-template-columns: 1fr 1fr"],
+  .card [style*="grid-template-columns:1fr 1fr"],
+  .card [style*="grid-template-columns: 2fr 3fr"],
+  .card [style*="grid-template-columns: 2fr 2fr"],
   .card form > div[style*="grid-template-columns"] {
     grid-template-columns: 1fr !important;
   }
+  .card [style*="grid-template-columns: repeat(4"],
+  .card [style*="grid-template-columns:repeat(4"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
   .card form[style*="display:flex"] { flex-wrap: wrap; }
+  .card form[style*="display:flex"] .textinput { min-width: 0; flex: 1 1 100%; }
+
+  /* Links da rodada: input + Copiar + Abrir, em coluna no mobile */
+  .card div[style*="display:flex"][style*="gap:8px"] {
+    flex-wrap: wrap;
+  }
+  .card div[style*="display:flex"][style*="gap:8px"] > .textinput {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
 
   /* Admin: summary do <details> empilha o nome e o "abrir rodada" */
   .card details > summary {
