@@ -173,34 +173,43 @@ h3.serif { font-family: var(--font-display); font-weight: 400; }
 }
 .section-header .eyebrow { white-space: nowrap; }
 
-.medidor-hero {
+.resumo-hero {
   display: grid;
-  grid-template-columns: 1fr 1.4fr;
-  gap: 12mm;
-  align-items: stretch;
+  grid-template-columns: 1fr auto;
+  gap: 10mm;
+  align-items: center;
+  background: var(--card);
+  border: 0.5px solid var(--hairline);
+  border-radius: 14px;
+  padding: 10mm 12mm;
 }
 .medidor-number {
-  background: var(--card);
-  border: 1.5px solid var(--hairline-strong);
-  border-radius: 14px;
-  padding: 10mm;
-  display: flex; flex-direction: column; justify-content: space-between;
+  display: flex; flex-direction: column;
+  gap: 4mm;
 }
 .medidor-number__value {
   font-family: var(--font-display);
-  font-size: 132px;
-  line-height: 1;
+  font-size: 96px;
+  line-height: 0.95;
   letter-spacing: -0.03em;
+  margin: 0;
 }
-.medidor-number__faixa {
+.medidor-number__scale {
+  margin: 0;
+  font-size: 12px;
+  max-width: 60ch;
+}
+.medidor-faixa {
   display: inline-flex; align-items: center; gap: 8px;
-  margin-top: 8mm;
-  padding: 8px 14px;
+  padding: 8px 16px;
   border-radius: 999px;
-  border: 1.5px solid currentColor;
+  border: 1px solid currentColor;
   font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
 }
-.medidor-number__dot { width: 10px; height: 10px; border-radius: 999px; background: currentColor; }
+.medidor-faixa__dot { width: 10px; height: 10px; border-radius: 999px; background: currentColor; flex-shrink: 0; }
+.medidor-faixa__text { line-height: 1; }
 
 .pilares-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5mm; }
 .pilar-card {
@@ -228,7 +237,8 @@ h3.serif { font-family: var(--font-display); font-weight: 400; }
   padding: 5mm;
 }
 .metric__label { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim); }
-.metric__value { font-family: var(--font-display); font-size: 32px; margin-top: 2mm; }
+.metric__value { font-family: var(--font-display); font-size: 32px; margin-top: 2mm; line-height: 1.1; }
+.metric__value--empty { color: var(--ink-muted); font-size: 28px; }
 .metric__note { font-size: 11px; color: var(--ink-dim); margin-top: 2mm; }
 
 /* Gate alert */
