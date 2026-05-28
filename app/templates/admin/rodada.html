@@ -93,6 +93,47 @@
       </div>
     {% endfor %}
   </div>
+
+  <details class="msg-kit">
+    <summary class="msg-kit__summary"><span class="eyebrow">▸ Mensagens prontas pra mandar no WhatsApp / e-mail</span></summary>
+    <div class="msg-kit__body">
+      <p class="muted" style="font-size:12px; margin: 8px 0 12px;">Copie e cole. Personalize com o nome da empresa / mentor antes de mandar.</p>
+
+      <div class="msg-kit__item">
+        <p class="eyebrow">Lançamento (dia 1) — pro time</p>
+        <textarea readonly class="msg-kit__text" id="msg-launch" onclick="this.select()" rows="6">Oi pessoal, tudo bem? Aqui é da {{ empresa.nome }}.
+
+Como parte do programa ELO Business, vamos fazer um diagnóstico rápido e anônimo sobre como é trabalhar aqui — ~12 minutos.
+
+A nota vira a base do trabalho dos próximos 6 meses. Quanto mais honesto, mais útil.
+
+Seu link individual: {{ link_colab }}
+
+Pode pausar e voltar. Prazo: até [DATA]. Obrigado!</textarea>
+        <button type="button" class="btn btn--ghost msg-kit__copy" onclick="copiarMensagem('msg-launch', this)">Copiar</button>
+      </div>
+
+      <div class="msg-kit__item">
+        <p class="eyebrow">Lembrete (3 dias depois) — pra quem ainda não respondeu</p>
+        <textarea readonly class="msg-kit__text" id="msg-remind" onclick="this.select()" rows="4">Oi! Lembrando do diagnóstico ELO Business. Quem ainda não respondeu, são ~12 min e fica anônimo.
+
+Link: {{ link_colab }}
+
+Prazo final: [DATA]. Sua resposta conta muito.</textarea>
+        <button type="button" class="btn btn--ghost msg-kit__copy" onclick="copiarMensagem('msg-remind', this)">Copiar</button>
+      </div>
+
+      <div class="msg-kit__item">
+        <p class="eyebrow">Pro sócio / dono</p>
+        <textarea readonly class="msg-kit__text" id="msg-socio" onclick="this.select()" rows="5">Oi [NOME], pra fechar a coleta da {{ empresa.nome }}, falta o seu lado.
+
+São ~12 minutos. Os primeiros 41 itens espelham o que o time responde — quanto mais honesto agora, mais útil fica o Relatório de Gap na próxima mentoria.
+
+Seu link: {{ link_socio }}</textarea>
+        <button type="button" class="btn btn--ghost msg-kit__copy" onclick="copiarMensagem('msg-socio', this)">Copiar</button>
+      </div>
+    </div>
+  </details>
 </div>
 
 {# ── Ações ────────────────────────────────────────────────────── #}
@@ -126,6 +167,15 @@
 function copiarLink(id, btn) {
   const el = document.getElementById(id);
   el.select();
+  navigator.clipboard.writeText(el.value).then(() => {
+    const original = btn.textContent;
+    btn.textContent = "✓ copiado";
+    setTimeout(() => { btn.textContent = original; }, 1800);
+  });
+}
+
+function copiarMensagem(id, btn) {
+  const el = document.getElementById(id);
   navigator.clipboard.writeText(el.value).then(() => {
     const original = btn.textContent;
     btn.textContent = "✓ copiado";

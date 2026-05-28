@@ -459,6 +459,48 @@ details[open] .empresa-summary::after { transform: rotate(180deg); }
 .empresa-editar[open] .empresa-editar__summary::before { transform: rotate(90deg); }
 .empresa-editar__summary:hover .eyebrow { color: var(--ink); }
 
+/* Kit de mensagens prontas pro mentor compartilhar */
+.msg-kit {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 0.5px solid var(--hairline);
+}
+.msg-kit__summary {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  display: inline-block;
+}
+.msg-kit__summary::-webkit-details-marker { display: none; }
+.msg-kit__summary:hover .eyebrow { color: var(--ink); }
+.msg-kit__body { margin-top: 8px; }
+.msg-kit__item {
+  position: relative;
+  padding: 14px 16px;
+  background: var(--card-soft);
+  border: 0.5px solid var(--hairline);
+  border-radius: var(--r-sm);
+  margin-bottom: 12px;
+}
+.msg-kit__item .eyebrow { margin: 0 0 8px; }
+.msg-kit__text {
+  width: 100%;
+  background: var(--card);
+  border: 0.5px solid var(--hairline);
+  border-radius: 4px;
+  padding: 10px 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  resize: vertical;
+  margin-bottom: 8px;
+}
+.msg-kit__copy {
+  font-size: 12px;
+  padding: 6px 14px;
+}
+
 /* Hero admin (compacto, sem form-hero pesado) */
 .admin-hero {
   display: flex;

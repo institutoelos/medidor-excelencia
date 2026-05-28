@@ -24,6 +24,19 @@
 
 {% macro fmt(v, suf="") %}{% if v is none %}—{% else %}{{ v }}{{ suf }}{% endif %}{% endmacro %}
 
+{# Glossário inline. Use {{ g('Top 2 Box') }} pra renderizar com tooltip. #}
+{% set GLOSS = {
+  "Top 2 Box": "Percentual de pessoas que deu nota 4 ou 5 — convicção positiva. Nota 3 é neutra e não conta. Padrão Trust Index / GPTW.",
+  "Consciência Sistêmica": "Quanto o sócio enxerga sistemas reais funcionando na empresa. Calculado pela média de Top 2 Box dos 17 itens divergentes (que só ele responde).",
+  "Cegueira do dono": "Item em que o sócio enxerga 15+ pontos acima do time. Sinal de que o sistema desenhado não chega à vivência.",
+  "Subestimação": "Item em que o time enxerga 15+ pontos acima do sócio. Sócio não dá crédito ao que o time já vive bem.",
+  "eNPS": "Recomendação do time (Promotores − Detratores). Escala de -100 a +100. Padrão de mercado pra mensurar lealdade interna.",
+  "Likert": "Escala de 5 pontos pra medir intensidade de concordância: 1 (nunca) a 5 (sempre).",
+  "Gate": "Pilar com nota abaixo de 60 — trava o conjunto. Antes de avançar nos outros, é preciso reconstruir esse alicerce.",
+  "Reaferição": "Nova rodada do diagnóstico em 6 ou 12 meses pra medir evolução desde a linha de base.",
+} %}
+{% macro g(termo) %}<abbr class="gloss-term" title="{{ GLOSS[termo] }}">{{ termo }}</abbr>{% endmacro %}
+
 {# ────────────────────────────────────────────────────────────────
    PÁGINA 1 — Capa
    ──────────────────────────────────────────────────────────────── #}
@@ -239,7 +252,7 @@
       {% endif %}
       O Relatório de Gap identifica {{ d.gaps_consolidados[PILARES[0]].n_cegueira + d.gaps_consolidados[PILARES[1]].n_cegueira + d.gaps_consolidados[PILARES[2]].n_cegueira }} itens de cegueira do dono (sócio enxerga 15+ pontos acima do time) entre os 41 itens espelho.
       O eNPS está em <strong>{{ fmt(d.enps.enps) }}</strong>.
-      A Consciência Sistêmica do empresário, calculada sobre os 17 itens divergentes, marca <strong>{{ fmt(d.consciencia.indice) }}</strong> em Top 2 Box.
+      A {{ g('Consciência Sistêmica') }} do empresário, calculada sobre os 17 itens divergentes, marca <strong>{{ fmt(d.consciencia.indice) }}</strong> em {{ g('Top 2 Box') }}.
     </p>
   </div>
 
@@ -276,7 +289,7 @@
     </div>
 
     <div>
-      <p class="eyebrow">Pilares (Top 2 Box)</p>
+      <p class="eyebrow">Pilares ({{ g('Top 2 Box') }})</p>
       {% for p in PILARES %}
         {% set nota = d.notas_pilares_colab[p] %}
         <div style="margin-bottom: 6mm;">
@@ -359,6 +372,18 @@
       {% endfor %}
     </div>
   </div>
+
+  {% if tres_fragies %}
+    <div class="mentor-prompts">
+      <p class="eyebrow mentor-prompts__eyebrow">Pra discutir na próxima sessão</p>
+      <p class="mentor-prompts__lead">Três perguntas pra puxar do dono, derivadas dos itens mais frágeis deste pilar:</p>
+      <ol class="mentor-prompts__list">
+        {% for num, t2 in tres_fragies %}
+          <li>"<strong>{{ textos_colab[num] }}</strong>" — o time deu {{ fmt(t2, '%') }} positivo. Como você explica isso? O que precisaria mudar pra esse número subir nos próximos 6 meses?</li>
+        {% endfor %}
+      </ol>
+    </div>
+  {% endif %}
 
   <p class="eyebrow">Todos os {{ pdata.n_itens }} itens · % positivo (notas 4–5), ordenado do mais frágil ao mais forte</p>
   <div class="dist-legenda">
@@ -496,7 +521,7 @@
     <span class="eyebrow">09 · Sócio vs Colaborador</span>
   </div>
   <p class="prose">
-    Para cada um dos 41 itens espelho, comparamos o Top 2 Box do sócio com o Top 2 Box do time. Gap ≥ 15 = cegueira do dono. Entre ±14 = alinhamento. Gap ≤ −15 = subestimação.
+    Para cada um dos 41 itens espelho, comparamos o {{ g('Top 2 Box') }} do sócio com o do time. Gap ≥ 15 = {{ g('Cegueira do dono') }}. Entre ±14 = alinhamento. Gap ≤ −15 = {{ g('Subestimação') }}.
   </p>
 
   {% for p in PILARES %}
@@ -569,6 +594,22 @@
       {% endfor %}
     </div>
   </div>
+
+  {% if d.vies_socio.total_flaggeds > 0 %}
+    <div class="vies-warning">
+      <p class="eyebrow vies-warning__eyebrow">⚠ Sinal de resposta uniforme — usar com cautela</p>
+      <p>
+        {% if d.vies_socio.total_flaggeds == 1 %}<strong>1 sócio</strong> respondeu{% else %}<strong>{{ d.vies_socio.total_flaggeds }} sócios</strong> responderam{% endif %} com perfil "no automático" — desvio-padrão muito baixo ou 80%+ das respostas em 4-5. Pode indicar resposta socialmente-desejável em vez de observação real. Vale conferir os números em conversa direta na próxima sessão.
+      </p>
+      <ul class="vies-warning__list">
+        {% for s in d.vies_socio.socios %}
+          {% if s.flag %}
+            <li>Sócio #{{ s.respondente_id }}: média {{ s.media }}, desvio {{ s.std_dev }}, {{ s.pct_top2 }}% respostas em 4-5 ({% if s.flag == "ambos" %}ambos os sinais{% else %}{{ s.flag }}{% endif %})</li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
 
   <h3 class="serif gap-8" style="font-size: 20px;">Pontos cegos do empresário</h3>
   <p class="prose">Itens divergentes com média individual ≤ 2.0. São base do plano de mentoria individual no ELO Business.</p>
