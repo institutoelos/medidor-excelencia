@@ -123,6 +123,52 @@ footer.app {
   padding: 36px 32px;
   margin-bottom: 32px;
 }
+
+/* Tela 0 de boas-vindas (substitui o form-hero genérico) */
+.welcome {
+  background: var(--card);
+  border: 0.5px solid var(--hairline);
+  border-radius: var(--r-lg);
+  padding: 44px 40px;
+  margin-bottom: 28px;
+}
+.welcome .eyebrow { color: var(--copper); margin: 0 0 12px; }
+.welcome__title {
+  font-family: var(--font-display);
+  font-size: 38px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin: 0 0 14px;
+}
+.welcome__title em { font-style: normal; color: var(--copper); }
+.welcome__lead {
+  font-size: 16px;
+  color: var(--ink-2);
+  margin: 0 0 24px;
+  max-width: 60ch;
+}
+.welcome__bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.welcome__bullets li {
+  padding: 12px 14px;
+  background: var(--card-soft);
+  border-left: 2px solid var(--copper);
+  border-radius: 4px;
+  font-size: 14px;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+.welcome__bullets li strong { color: var(--ink); }
+.welcome__cta {
+  padding: 16px 28px;
+  font-size: 15px;
+}
 .form-hero h1 {
   font-family: var(--font-display);
   font-size: 36px;
@@ -1026,6 +1072,12 @@ table.std th { color: var(--ink-dim); font-weight: 600; font-size: 12px; text-tr
   }
   .form-hero h1 { font-size: 24px; }
   .form-hero p { font-size: 14px; }
+
+  .welcome { padding: 24px 20px; margin-bottom: 20px; }
+  .welcome__title { font-size: 26px; }
+  .welcome__lead { font-size: 14px; }
+  .welcome__bullets li { font-size: 13px; padding: 10px 12px; }
+  .welcome__cta { width: 100%; justify-content: center; padding: 14px 20px; }
 
   .confid-strip { font-size: 12px; padding: 10px 12px; }
 

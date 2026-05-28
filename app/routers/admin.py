@@ -18,11 +18,14 @@ from app.models.db import (
     TIPOS_RODADA,
     get_session,
 )
-from app.services.auth import autenticar_admin
+from app.services.auth import autenticar_admin, autenticar_admin_com_csrf, csrf_token_para
 from app.services.engine import calcular_parciais_rodada
 from app.services.qr import qr_svg
 
-router = APIRouter(prefix="/admin", dependencies=[Depends(autenticar_admin)])
+# Em GET, autenticar_admin_com_csrf vira no-op (não checa CSRF). Em POST/PUT/DELETE,
+# valida o token _csrf do form. Aplicar no router-level garante que todo POST
+# do admin é protegido.
+router = APIRouter(prefix="/admin", dependencies=[Depends(autenticar_admin_com_csrf)])
 
 _BASE = os.path.dirname(os.path.dirname(__file__))
 templates = Jinja2Templates(directory=os.path.join(_BASE, "templates"))
@@ -34,6 +37,7 @@ def index(
     request: Request,
     q: str = Query("", description="Busca por nome de empresa"),
     db: Session = Depends(get_session),
+    usuario: str = Depends(autenticar_admin),
 ):
     query = db.query(Empresa)
     if q.strip():
@@ -54,6 +58,7 @@ def index(
             "parciais": parciais,
             "tipos_rodada": TIPOS_RODADA,
             "q": q,
+            "csrf": csrf_token_para(usuario),
         },
     )
 
@@ -137,7 +142,12 @@ def reabrir(rodada_id: int, db: Session = Depends(get_session)):
 
 
 @router.get("/rodadas/{rodada_id}")
-def painel_rodada(rodada_id: int, request: Request, db: Session = Depends(get_session)):
+def painel_rodada(
+    rodada_id: int,
+    request: Request,
+    db: Session = Depends(get_session),
+    usuario: str = Depends(autenticar_admin),
+):
     rodada = db.query(Rodada).filter(Rodada.id == rodada_id).first()
     if rodada is None:
         raise HTTPException(status_code=404, detail="Rodada não encontrada.")
@@ -153,6 +163,7 @@ def painel_rodada(rodada_id: int, request: Request, db: Session = Depends(get_se
             "base_url": base_url,
             "link_colab": f"{base_url}/f/colab/{rodada.token_colab}",
             "link_socio": f"{base_url}/f/socio/{rodada.token_socio}",
+            "csrf": csrf_token_para(usuario),
         },
     )
 

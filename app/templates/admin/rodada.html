@@ -108,11 +108,13 @@
   <div class="actions-row actions-row--danger">
     {% if rodada.status == "aberta" %}
       <form method="post" action="/admin/rodadas/{{ rodada.id }}/fechar" style="display:inline;">
+        <input type="hidden" name="_csrf" value="{{ csrf }}">
         <button class="btn btn--danger" type="submit" onclick="return confirm('Fechar a coleta? Novas respostas serão bloqueadas. (Você pode reabrir depois.)')">Fechar coleta</button>
       </form>
       <span class="muted" style="font-size:12px;">Fecha a coleta — novas respostas ficam bloqueadas. Dá pra reabrir depois.</span>
     {% else %}
       <form method="post" action="/admin/rodadas/{{ rodada.id }}/reabrir" style="display:inline;">
+        <input type="hidden" name="_csrf" value="{{ csrf }}">
         <button class="btn btn--ghost" type="submit">Reabrir coleta</button>
       </form>
       <span class="muted" style="font-size:12px;">A coleta está fechada. Reabra se quiser receber mais respostas.</span>
