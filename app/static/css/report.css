@@ -52,6 +52,69 @@ body {
   font-weight: 600; color: var(--ink-dim);
 }
 
+/* Modo Sessão — apresentação pro mentor */
+.report-nav-mode {
+  left: auto;
+  right: 14px;
+  border: none;
+  background: var(--copper);
+  color: #fff;
+  cursor: pointer;
+}
+.report-nav-mode:hover {
+  background: var(--ink);
+  color: #fff;
+  border-color: transparent;
+}
+.session-hidden { display: none !important; }
+body.session-mode { background: var(--paper); }
+body.session-mode .page,
+body.session-mode .toc-nav {
+  min-height: calc(100vh - 60px);
+  margin: 0 auto;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+.session-indicator {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+  z-index: 11;
+  display: none;
+}
+.session-nav-hints {
+  position: fixed;
+  bottom: 14px;
+  right: 14px;
+  background: rgba(0,0,0,0.6);
+  color: var(--paper);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-family: var(--font-body);
+  z-index: 11;
+  display: none;
+}
+.session-nav-hints span {
+  background: rgba(255,255,255,0.15);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+body.session-mode .session-indicator,
+body.session-mode .session-nav-hints { display: block; }
+
+@media print {
+  .report-nav-mode, .session-indicator, .session-nav-hints { display: none !important; }
+}
+
 /* Botão "voltar pro painel" — só no browser, escondido no print */
 .report-nav-back {
   position: fixed;

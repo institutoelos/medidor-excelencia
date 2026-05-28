@@ -113,7 +113,16 @@ def abrir_rodada(
     empresa = db.query(Empresa).filter(Empresa.id == empresa_id).first()
     if empresa is None:
         raise HTTPException(status_code=404, detail="Empresa não encontrada.")
-    r = Rodada(empresa_id=empresa_id, tipo=tipo)
+    # Snapshot da estrutura no momento da abertura — imutável depois.
+    # Reaferição em 6/12m vai comparar contra esses números mesmo se a
+    # empresa reestruturar nesse meio-tempo.
+    r = Rodada(
+        empresa_id=empresa_id,
+        tipo=tipo,
+        snapshot_areas=empresa.lista_de_areas or "",
+        snapshot_tamanho_time=empresa.tamanho_time_esperado,
+        snapshot_qtd_socios=empresa.qtd_socios_esperados,
+    )
     db.add(r)
     db.commit()
     return RedirectResponse(url=f"/admin/rodadas/{r.id}", status_code=303)

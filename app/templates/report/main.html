@@ -10,6 +10,7 @@
 <body>
 
 <a href="/admin/rodadas/{{ d.rodada.id }}" class="report-nav-back" id="report-nav-back">← Voltar ao painel</a>
+<button type="button" class="report-nav-back report-nav-mode" id="report-mode-toggle">Modo Sessão</button>
 
 {# Macros úteis #}
 {% macro cor_pilar(nota) -%}
@@ -754,5 +755,56 @@
   <div class="page-foot"><span>{{ d.empresa.nome }} · Linha de base</span><span>12</span></div>
 </section>
 
+<script>
+// Modo Sessão — apresentação seção por seção. Pro mentor projetar.
+(function() {
+  const toggle = document.getElementById("report-mode-toggle");
+  if (!toggle) return;
+  const sections = Array.from(document.querySelectorAll(".page, .toc-nav"));
+  let modeActive = false;
+  let idx = 0;
+  const indicator = document.createElement("div");
+  indicator.id = "session-indicator";
+  indicator.className = "session-indicator";
+  document.body.appendChild(indicator);
+  const navHints = document.createElement("div");
+  navHints.id = "session-nav-hints";
+  navHints.className = "session-nav-hints";
+  navHints.innerHTML = '<span>← →</span> navegar &nbsp;·&nbsp; <span>Esc</span> sair';
+  document.body.appendChild(navHints);
+
+  function render() {
+    sections.forEach((s, i) => {
+      if (modeActive && i !== idx) s.classList.add("session-hidden");
+      else s.classList.remove("session-hidden");
+    });
+    indicator.textContent = `${idx + 1} / ${sections.length}`;
+    if (modeActive) sections[idx].scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function enter() {
+    modeActive = true;
+    document.body.classList.add("session-mode");
+    toggle.textContent = "Sair do Modo Sessão";
+    render();
+  }
+  function exit() {
+    modeActive = false;
+    document.body.classList.remove("session-mode");
+    toggle.textContent = "Modo Sessão";
+    render();
+  }
+  function next() { if (modeActive && idx < sections.length - 1) { idx++; render(); } }
+  function prev() { if (modeActive && idx > 0) { idx--; render(); } }
+
+  toggle.addEventListener("click", () => modeActive ? exit() : enter());
+  document.addEventListener("keydown", (e) => {
+    if (!modeActive) return;
+    if (e.key === "Escape") exit();
+    else if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { e.preventDefault(); next(); }
+    else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); prev(); }
+  });
+})();
+</script>
 </body>
 </html>

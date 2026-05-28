@@ -10,9 +10,19 @@
   <p>
     Início: {{ rodada.data_inicio.strftime("%d/%m/%Y") }}
     {% if rodada.data_fim %} · Fim: {{ rodada.data_fim.strftime("%d/%m/%Y") }}{% endif %}
-    {% if empresa.tamanho_time_esperado %} · time esperado: <strong>{{ empresa.tamanho_time_esperado }}</strong> colaboradores{% endif %}
-    {% if empresa.qtd_socios_esperados %} · <strong>{{ empresa.qtd_socios_esperados }}</strong> sócio(s) esperados{% endif %}
+    {% if rodada.snapshot_tamanho_time %} · time esperado (snapshot): <strong>{{ rodada.snapshot_tamanho_time }}</strong>{% endif %}
+    {% if rodada.snapshot_qtd_socios %} · <strong>{{ rodada.snapshot_qtd_socios }}</strong> sócio(s) esperados (snapshot){% endif %}
   </p>
+  {% set areas_atuais = empresa.lista_de_areas or "" %}
+  {% set areas_snapshot = rodada.snapshot_areas or "" %}
+  {% if rodada.snapshot_areas is not none and areas_atuais != areas_snapshot %}
+    <div class="snapshot-drift">
+      <strong>⚠ Estrutura da empresa mudou desde esta rodada.</strong>
+      Snapshot tinha <em>{{ areas_snapshot or "(sem áreas)" }}</em>.
+      Hoje está <em>{{ areas_atuais or "(sem áreas)" }}</em>.
+      O relatório segue a estrutura do snapshot — comparações com a próxima rodada vão precisar reconciliação.
+    </div>
+  {% endif %}
 </section>
 
 {# ── Painel parcial ───────────────────────────────────────────── #}
