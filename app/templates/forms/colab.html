@@ -2,15 +2,21 @@
 {% block title %}Medidor de Excelência — {{ empresa.nome }}{% endblock %}
 {% block content %}
 
-<section class="form-hero">
-  <p class="eyebrow">Diagnóstico do Pilar Pessoas — Versão Colaborador</p>
-  <h1 class="serif">{{ empresa.nome }}</h1>
-  <p>
-    Esse diagnóstico é parte do programa <strong>ELO Business</strong>. Suas respostas individuais
-    são <strong>confidenciais</strong> — o relatório só mostra dados agregados, e qualquer recorte
-    com menos de 5 pessoas é suprimido. Dá pra pausar e voltar quando quiser; seu progresso fica
-    salvo automaticamente neste navegador.
+<section class="welcome">
+  <p class="eyebrow">Diagnóstico do programa ELO Business</p>
+  <h1 class="serif welcome__title">Como é trabalhar na <em>{{ empresa.nome }}</em>?</h1>
+  <p class="welcome__lead">
+    Sua resposta vira a base do trabalho de excelência da empresa nos próximos 6 meses.
+    Quanto mais honesto você for, mais útil fica.
   </p>
+
+  <ul class="welcome__bullets">
+    <li><strong>100% anônimo</strong> — nem a empresa nem a ELOS conseguem ligar sua resposta ao seu nome. Recortes com menos de 5 pessoas são suprimidos no relatório.</li>
+    <li><strong>~12 minutos</strong> — são 58 perguntas curtas com opção de 1 a 5, mais alguns dados sobre você no fim.</li>
+    <li><strong>Pode pausar e voltar</strong> — seu progresso fica salvo automaticamente neste navegador.</li>
+  </ul>
+
+  <button type="button" class="btn btn--copper welcome__cta" id="welcome-start">Começar diagnóstico →</button>
 </section>
 
 <div class="progress-sticky">

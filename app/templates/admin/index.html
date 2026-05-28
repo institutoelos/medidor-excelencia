@@ -41,6 +41,7 @@
           </p>
         </div>
         <form method="post" action="/admin/empresas/{{ empresa.id }}/rodadas" onsubmit="return confirm('Iniciar nova rodada de {{ empresa.nome }}?')" class="empresa-new-round">
+          <input type="hidden" name="_csrf" value="{{ csrf }}">
           <label class="empresa-new-round__label">
             <span class="eyebrow">Tipo da nova rodada</span>
             <select class="select" name="tipo">
@@ -55,6 +56,7 @@
       <details class="empresa-editar">
         <summary class="empresa-editar__summary"><span class="eyebrow">Editar dados da empresa</span></summary>
         <form method="post" action="/admin/empresas/{{ empresa.id }}/editar" style="margin-top:12px;">
+          <input type="hidden" name="_csrf" value="{{ csrf }}">
           <div style="display:grid; grid-template-columns: 2fr 2fr 1fr 1fr; gap:8px; margin-bottom:10px;">
             <input class="textinput" name="nome" value="{{ empresa.nome }}" required>
             <input class="textinput" name="areas" value="{{ empresa.lista_de_areas or '' }}" placeholder="áreas separadas por vírgula">
@@ -122,6 +124,7 @@
     <span class="muted" style="font-size:13px;">Clique para abrir o formulário</span>
   </summary>
   <form method="post" action="/admin/empresas" style="margin-top:16px;">
+    <input type="hidden" name="_csrf" value="{{ csrf }}">
     <div style="display:grid; grid-template-columns: 2fr 3fr; gap:12px; margin-bottom:12px;">
       <input class="textinput" name="nome" placeholder="Nome da empresa" required>
       <input class="textinput" name="areas" placeholder="Áreas (separadas por vírgula). Ex.: comercial, financeiro, operações">

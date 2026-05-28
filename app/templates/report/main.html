@@ -58,11 +58,87 @@
 </section>
 
 {# ────────────────────────────────────────────────────────────────
+   PÁGINA 1.5 — Pra você, dono (resumo executivo amigável antes da técnica)
+   ──────────────────────────────────────────────────────────────── #}
+{% set nota_max = namespace(v=None, label=None) %}
+{% set nota_min = namespace(v=None, label=None) %}
+{% for p in PILARES %}
+  {% set n = d.notas_pilares_colab[p] %}
+  {% if n is not none %}
+    {% if nota_max.v is none or n > nota_max.v %}{% set nota_max.v = n %}{% set nota_max.label = PILAR_LABEL[p] %}{% endif %}
+    {% if nota_min.v is none or n < nota_min.v %}{% set nota_min.v = n %}{% set nota_min.label = PILAR_LABEL[p] %}{% endif %}
+  {% endif %}
+{% endfor %}
+{% set total_cegueira = d.gaps_consolidados[PILARES[0]].n_cegueira + d.gaps_consolidados[PILARES[1]].n_cegueira + d.gaps_consolidados[PILARES[2]].n_cegueira %}
+
+<section class="page page--owner" id="pra-voce">
+  <div class="section-header">
+    <h1 class="serif">Pra você, dono</h1>
+    <span class="eyebrow">Resumo em 1 minuto</span>
+  </div>
+
+  <p class="prose prose--lead">O resumo executivo em linguagem direta, sem jargão. As próximas páginas detalham a metodologia — esta página é pra você ler agora.</p>
+
+  <div class="owner-bullets">
+    <div class="owner-bullets__item">
+      <div class="owner-bullets__num">1</div>
+      <div>
+        <div class="owner-bullets__title">O time deu nota <strong>{{ fmt(d.medidor) }}</strong> de 100 pra como é trabalhar aqui.</div>
+        <div class="owner-bullets__sub">Faixa: <strong style="color: {{ d.faixa.cor }};">{{ d.faixa.leitura }}</strong> · baseado em {{ d.contagens.colaboradores }} respondentes do time {% if d.contagens.socios %}+ {{ d.contagens.socios }} sócio(s){% endif %}.</div>
+      </div>
+    </div>
+
+    {% if nota_max.label and nota_min.label and nota_max.label != nota_min.label %}
+    <div class="owner-bullets__item">
+      <div class="owner-bullets__num">2</div>
+      <div>
+        <div class="owner-bullets__title">O ponto mais forte hoje é <strong>{{ nota_max.label }}</strong> ({{ fmt(nota_max.v) }} de 100).</div>
+        <div class="owner-bullets__sub">É onde o time mais se reconhece. Continue investindo.</div>
+      </div>
+    </div>
+
+    <div class="owner-bullets__item">
+      <div class="owner-bullets__num">3</div>
+      <div>
+        <div class="owner-bullets__title">O ponto que mais precisa de atenção é <strong>{{ nota_min.label }}</strong> ({{ fmt(nota_min.v) }} de 100).</div>
+        <div class="owner-bullets__sub">Comece o plano de ação por aqui.</div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if d.contagens.socios and total_cegueira > 0 %}
+    <div class="owner-bullets__item">
+      <div class="owner-bullets__num">4</div>
+      <div>
+        <div class="owner-bullets__title">Em <strong>{{ total_cegueira }} pontos</strong>, você enxerga melhor que o time vê.</div>
+        <div class="owner-bullets__sub">O time não está vivenciando como você planeja. Vale conversar sobre esses itens nas próximas sessões.</div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if d.enps.enps is not none %}
+    <div class="owner-bullets__item">
+      <div class="owner-bullets__num">{% if d.contagens.socios and total_cegueira > 0 %}5{% else %}4{% endif %}</div>
+      <div>
+        <div class="owner-bullets__title">Recomendação do time (eNPS): <strong>{{ fmt(d.enps.enps) }}</strong> (escala -100 a +100).</div>
+        <div class="owner-bullets__sub">{{ d.enps.promotores }} pessoa(s) recomendam fortemente, {{ d.enps.detratores }} pessoa(s) não recomendam, o resto está no meio.</div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <p class="prose prose--small">As próximas páginas detalham cada um desses pontos. <a href="#resumo">Ver resumo técnico →</a></p>
+
+  <div class="page-foot"><span>{{ d.empresa.nome }} · Pra você, dono</span><span>01</span></div>
+</section>
+
+{# ────────────────────────────────────────────────────────────────
    PÁGINA 2 — Resumo executivo (com sumário clicável no PDF)
    ──────────────────────────────────────────────────────────────── #}
 <nav class="toc-nav" aria-label="Sumário do relatório">
   <p class="eyebrow">Sumário</p>
   <ol>
+    <li><a href="#pra-voce">Pra você, dono (resumo em 1 minuto)</a></li>
     <li><a href="#resumo">Resumo executivo</a></li>
     <li><a href="#painel">Painel geral</a></li>
     <li><a href="#pilar-cultura">Pilar Cultura, Tribo e Engajamento</a></li>

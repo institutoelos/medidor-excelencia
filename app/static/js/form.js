@@ -287,9 +287,25 @@
     localStorage.removeItem(stepKey);
   });
 
+  // ── Botão "Começar diagnóstico" da tela 0 de boas-vindas
+  const welcomeStart = document.getElementById("welcome-start");
+  if (welcomeStart) {
+    welcomeStart.addEventListener("click", () => {
+      const firstStep = steps[0];
+      if (firstStep) {
+        firstStep.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+        // Foca a primeira opção pra navegação por teclado funcionar de cara
+        setTimeout(() => {
+          const firstLabel = firstStep.querySelector(".likert__opt, .nps-grid label");
+          if (firstLabel) firstLabel.focus();
+        }, 400);
+      }
+    });
+  }
+
   // ── Boot
   // Se não tem progresso salvo, fica na step 0 SEM rolar — usuário precisa
-  // ler o form-hero (boas-vindas, confidencialidade) antes de começar.
+  // ler a tela de boas-vindas antes de começar.
   // Se tem progresso, rola direto pra onde parou.
   const hasSavedProgress = !!localStorage.getItem(stepKey) || Object.keys(saved).length > 0;
   showStep(current, "forward", !hasSavedProgress);

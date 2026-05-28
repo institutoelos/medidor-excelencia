@@ -2,15 +2,21 @@
 {% block title %}Medidor de Excelência (Sócio) — {{ empresa.nome }}{% endblock %}
 {% block content %}
 
-<section class="form-hero">
-  <p class="eyebrow">Diagnóstico do Pilar Pessoas — Versão Sócio / Empresário</p>
-  <h1 class="serif">{{ empresa.nome }}</h1>
-  <p>
-    Suas respostas geram o <strong>Relatório de Gap</strong> quando comparadas com as do time.
-    Os primeiros 41 itens descrevem o que você <strong>observa acontecendo</strong> — não o que
-    você pretende ou acredita. Os 17 últimos perguntam sobre o sistema que você desenhou.
-    Quanto mais honesto agora, mais útil será o Plano de Ação.
+<section class="welcome">
+  <p class="eyebrow">Diagnóstico do programa ELO Business · versão sócio</p>
+  <h1 class="serif welcome__title">Como você vê a <em>{{ empresa.nome }}</em> hoje?</h1>
+  <p class="welcome__lead">
+    Sua resposta será comparada com a do time — e é o gap entre as duas que dá o ponto de partida da mentoria.
+    Quanto mais honesto agora (mesmo que doa), mais útil fica.
   </p>
+
+  <ul class="welcome__bullets">
+    <li><strong>Responda pelo que você observa acontecendo</strong>, não pelo que você gostaria que fosse verdade. Os 41 primeiros itens espelham o que o time vai responder.</li>
+    <li><strong>17 últimos itens são só seus</strong> — sobre o sistema que você desenhou. Se a resposta honesta for "não sei dizer", marque baixo.</li>
+    <li><strong>~12 minutos</strong> — você pode pausar e voltar; o progresso fica salvo neste navegador.</li>
+  </ul>
+
+  <button type="button" class="btn btn--copper welcome__cta" id="welcome-start">Começar diagnóstico →</button>
 </section>
 
 <div class="progress-sticky">
