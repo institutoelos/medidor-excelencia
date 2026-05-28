@@ -41,6 +41,12 @@ def root(request: Request):
     return templates.TemplateResponse("landing.html", {"request": request})
 
 
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    """Browsers legacy/diretos buscam /favicon.ico sem ler o <link rel='icon'>."""
+    return RedirectResponse("/static/img/signo-elos.png", status_code=301)
+
+
 @app.get("/healthz")
 def healthz():
     return {
