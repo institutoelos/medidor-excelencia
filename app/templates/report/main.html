@@ -12,6 +12,26 @@
 <a href="/admin/rodadas/{{ d.rodada.id }}" class="report-nav-back" id="report-nav-back">← Voltar ao painel</a>
 <button type="button" class="report-nav-back report-nav-mode" id="report-mode-toggle">Modo Sessão</button>
 
+{# Índice lateral sticky — aproveita o corredor esquerdo em telas largas.
+   Escondido no mobile/tablet, no print e no Modo Sessão. #}
+<nav class="report-rail" id="report-rail" aria-label="Navegação do relatório">
+  <p class="report-rail__title">Seções</p>
+  <ol class="report-rail__list">
+    <li><a href="#pra-voce" data-target="pra-voce">Pra você, dono</a></li>
+    <li><a href="#resumo" data-target="resumo">Resumo executivo</a></li>
+    <li><a href="#painel" data-target="painel">Painel geral</a></li>
+    <li><a href="#pilar-cultura" data-target="pilar-cultura">Cultura, Tribo e Engajamento</a></li>
+    <li><a href="#pilar-educacao" data-target="pilar-educacao">Educação</a></li>
+    <li><a href="#pilar-feedback" data-target="pilar-feedback">Feedback e Mudança</a></li>
+    <li><a href="#retencao" data-target="retencao">Vetor de retenção</a></li>
+    <li><a href="#cortes" data-target="cortes">Cortes demográficos</a></li>
+    <li><a href="#gap" data-target="gap">Relatório de Gap</a></li>
+    <li><a href="#consciencia" data-target="consciencia">Consciência sistêmica</a></li>
+    <li><a href="#plano" data-target="plano">Plano de ação</a></li>
+    <li><a href="#linha-base" data-target="linha-base">Linha de base</a></li>
+  </ol>
+</nav>
+
 {# Macros úteis #}
 {% macro cor_pilar(nota) -%}
   {%- if nota is none -%}#6b6862
@@ -756,6 +776,36 @@
 </section>
 
 <script>
+// Índice lateral — destaca a seção ativa conforme rola (IntersectionObserver).
+(function() {
+  const rail = document.getElementById("report-rail");
+  if (!rail) return;
+  const links = Array.from(rail.querySelectorAll("a[data-target]"));
+  const byId = {};
+  links.forEach((a) => { byId[a.dataset.target] = a; });
+  const targets = links
+    .map((a) => document.getElementById(a.dataset.target))
+    .filter(Boolean);
+  if (!("IntersectionObserver" in window) || !targets.length) return;
+
+  let activeId = null;
+  const obs = new IntersectionObserver((entries) => {
+    // Pega a seção mais visível no topo do viewport
+    const visible = entries
+      .filter((e) => e.isIntersecting)
+      .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+    if (visible.length) {
+      const id = visible[0].target.id;
+      if (id !== activeId) {
+        if (activeId && byId[activeId]) byId[activeId].classList.remove("is-active");
+        if (byId[id]) byId[id].classList.add("is-active");
+        activeId = id;
+      }
+    }
+  }, { rootMargin: "-20% 0px -70% 0px", threshold: 0 });
+  targets.forEach((t) => obs.observe(t));
+})();
+
 // Modo Sessão — apresentação seção por seção. Pro mentor projetar.
 (function() {
   const toggle = document.getElementById("report-mode-toggle");
