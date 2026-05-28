@@ -3,11 +3,34 @@
 <head>
   <meta charset="utf-8">
   <title>Relatório — {{ d.empresa.nome }}</title>
+  <link rel="icon" type="image/png" href="/static/img/signo-elos.png">
+  <link rel="apple-touch-icon" href="/static/img/signo-elos.png">
   <link rel="stylesheet" href="/static/css/report.css">
 </head>
 <body>
 
 <a href="/admin/rodadas/{{ d.rodada.id }}" class="report-nav-back" id="report-nav-back">← Voltar ao painel</a>
+<button type="button" class="report-nav-back report-nav-mode" id="report-mode-toggle">Modo Sessão</button>
+
+{# Índice lateral sticky — aproveita o corredor esquerdo em telas largas.
+   Escondido no mobile/tablet, no print e no Modo Sessão. #}
+<nav class="report-rail" id="report-rail" aria-label="Navegação do relatório">
+  <p class="report-rail__title">Seções</p>
+  <ol class="report-rail__list">
+    <li><a href="#pra-voce" data-target="pra-voce">Pra você, dono</a></li>
+    <li><a href="#resumo" data-target="resumo">Resumo executivo</a></li>
+    <li><a href="#painel" data-target="painel">Painel geral</a></li>
+    <li><a href="#pilar-cultura" data-target="pilar-cultura">Cultura, Tribo e Engajamento</a></li>
+    <li><a href="#pilar-educacao" data-target="pilar-educacao">Educação</a></li>
+    <li><a href="#pilar-feedback" data-target="pilar-feedback">Feedback e Mudança</a></li>
+    <li><a href="#retencao" data-target="retencao">Vetor de retenção</a></li>
+    <li><a href="#cortes" data-target="cortes">Cortes demográficos</a></li>
+    <li><a href="#gap" data-target="gap">Relatório de Gap</a></li>
+    <li><a href="#consciencia" data-target="consciencia">Consciência sistêmica</a></li>
+    <li><a href="#plano" data-target="plano">Plano de ação</a></li>
+    <li><a href="#linha-base" data-target="linha-base">Linha de base</a></li>
+  </ol>
+</nav>
 
 {# Macros úteis #}
 {% macro cor_pilar(nota) -%}
@@ -21,6 +44,19 @@
 {%- endmacro %}
 
 {% macro fmt(v, suf="") %}{% if v is none %}—{% else %}{{ v }}{{ suf }}{% endif %}{% endmacro %}
+
+{# Glossário inline. Use {{ g('Top 2 Box') }} pra renderizar com tooltip. #}
+{% set GLOSS = {
+  "Top 2 Box": "Percentual de pessoas que deu nota 4 ou 5 — convicção positiva. Nota 3 é neutra e não conta. Padrão Trust Index / GPTW.",
+  "Consciência Sistêmica": "Quanto o sócio enxerga sistemas reais funcionando na empresa. Calculado pela média de Top 2 Box dos 17 itens divergentes (que só ele responde).",
+  "Cegueira do dono": "Item em que o sócio enxerga 15+ pontos acima do time. Sinal de que o sistema desenhado não chega à vivência.",
+  "Subestimação": "Item em que o time enxerga 15+ pontos acima do sócio. Sócio não dá crédito ao que o time já vive bem.",
+  "eNPS": "Recomendação do time (Promotores − Detratores). Escala de -100 a +100. Padrão de mercado pra mensurar lealdade interna.",
+  "Likert": "Escala de 5 pontos pra medir intensidade de concordância: 1 (nunca) a 5 (sempre).",
+  "Gate": "Pilar com nota abaixo de 60 — trava o conjunto. Antes de avançar nos outros, é preciso reconstruir esse alicerce.",
+  "Reaferição": "Nova rodada do diagnóstico em 6 ou 12 meses pra medir evolução desde a linha de base.",
+} %}
+{% macro g(termo) %}<abbr class="gloss-term" title="{{ GLOSS[termo] }}">{{ termo }}</abbr>{% endmacro %}
 
 {# ────────────────────────────────────────────────────────────────
    PÁGINA 1 — Capa
@@ -237,7 +273,7 @@
       {% endif %}
       O Relatório de Gap identifica {{ d.gaps_consolidados[PILARES[0]].n_cegueira + d.gaps_consolidados[PILARES[1]].n_cegueira + d.gaps_consolidados[PILARES[2]].n_cegueira }} itens de cegueira do dono (sócio enxerga 15+ pontos acima do time) entre os 41 itens espelho.
       O eNPS está em <strong>{{ fmt(d.enps.enps) }}</strong>.
-      A Consciência Sistêmica do empresário, calculada sobre os 17 itens divergentes, marca <strong>{{ fmt(d.consciencia.indice) }}</strong> em Top 2 Box.
+      A {{ g('Consciência Sistêmica') }} do empresário, calculada sobre os 17 itens divergentes, marca <strong>{{ fmt(d.consciencia.indice) }}</strong> em {{ g('Top 2 Box') }}.
     </p>
   </div>
 
@@ -274,7 +310,7 @@
     </div>
 
     <div>
-      <p class="eyebrow">Pilares (Top 2 Box)</p>
+      <p class="eyebrow">Pilares ({{ g('Top 2 Box') }})</p>
       {% for p in PILARES %}
         {% set nota = d.notas_pilares_colab[p] %}
         <div style="margin-bottom: 6mm;">
@@ -357,6 +393,18 @@
       {% endfor %}
     </div>
   </div>
+
+  {% if tres_fragies %}
+    <div class="mentor-prompts">
+      <p class="eyebrow mentor-prompts__eyebrow">Pra discutir na próxima sessão</p>
+      <p class="mentor-prompts__lead">Três perguntas pra puxar do dono, derivadas dos itens mais frágeis deste pilar:</p>
+      <ol class="mentor-prompts__list">
+        {% for num, t2 in tres_fragies %}
+          <li>"<strong>{{ textos_colab[num] }}</strong>" — o time deu {{ fmt(t2, '%') }} positivo. Como você explica isso? O que precisaria mudar pra esse número subir nos próximos 6 meses?</li>
+        {% endfor %}
+      </ol>
+    </div>
+  {% endif %}
 
   <p class="eyebrow">Todos os {{ pdata.n_itens }} itens · % positivo (notas 4–5), ordenado do mais frágil ao mais forte</p>
   <div class="dist-legenda">
@@ -494,7 +542,7 @@
     <span class="eyebrow">09 · Sócio vs Colaborador</span>
   </div>
   <p class="prose">
-    Para cada um dos 41 itens espelho, comparamos o Top 2 Box do sócio com o Top 2 Box do time. Gap ≥ 15 = cegueira do dono. Entre ±14 = alinhamento. Gap ≤ −15 = subestimação.
+    Para cada um dos 41 itens espelho, comparamos o {{ g('Top 2 Box') }} do sócio com o do time. Gap ≥ 15 = {{ g('Cegueira do dono') }}. Entre ±14 = alinhamento. Gap ≤ −15 = {{ g('Subestimação') }}.
   </p>
 
   {% for p in PILARES %}
@@ -567,6 +615,22 @@
       {% endfor %}
     </div>
   </div>
+
+  {% if d.vies_socio.total_flaggeds > 0 %}
+    <div class="vies-warning">
+      <p class="eyebrow vies-warning__eyebrow">⚠ Sinal de resposta uniforme — usar com cautela</p>
+      <p>
+        {% if d.vies_socio.total_flaggeds == 1 %}<strong>1 sócio</strong> respondeu{% else %}<strong>{{ d.vies_socio.total_flaggeds }} sócios</strong> responderam{% endif %} com perfil "no automático" — desvio-padrão muito baixo ou 80%+ das respostas em 4-5. Pode indicar resposta socialmente-desejável em vez de observação real. Vale conferir os números em conversa direta na próxima sessão.
+      </p>
+      <ul class="vies-warning__list">
+        {% for s in d.vies_socio.socios %}
+          {% if s.flag %}
+            <li>Sócio #{{ s.respondente_id }}: média {{ s.media }}, desvio {{ s.std_dev }}, {{ s.pct_top2 }}% respostas em 4-5 ({% if s.flag == "ambos" %}ambos os sinais{% else %}{{ s.flag }}{% endif %})</li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
 
   <h3 class="serif gap-8" style="font-size: 20px;">Pontos cegos do empresário</h3>
   <p class="prose">Itens divergentes com média individual ≤ 2.0. São base do plano de mentoria individual no ELO Business.</p>
@@ -711,5 +775,86 @@
   <div class="page-foot"><span>{{ d.empresa.nome }} · Linha de base</span><span>12</span></div>
 </section>
 
+<script>
+// Índice lateral — destaca a seção ativa conforme rola (IntersectionObserver).
+(function() {
+  const rail = document.getElementById("report-rail");
+  if (!rail) return;
+  const links = Array.from(rail.querySelectorAll("a[data-target]"));
+  const byId = {};
+  links.forEach((a) => { byId[a.dataset.target] = a; });
+  const targets = links
+    .map((a) => document.getElementById(a.dataset.target))
+    .filter(Boolean);
+  if (!("IntersectionObserver" in window) || !targets.length) return;
+
+  let activeId = null;
+  const obs = new IntersectionObserver((entries) => {
+    // Pega a seção mais visível no topo do viewport
+    const visible = entries
+      .filter((e) => e.isIntersecting)
+      .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+    if (visible.length) {
+      const id = visible[0].target.id;
+      if (id !== activeId) {
+        if (activeId && byId[activeId]) byId[activeId].classList.remove("is-active");
+        if (byId[id]) byId[id].classList.add("is-active");
+        activeId = id;
+      }
+    }
+  }, { rootMargin: "-20% 0px -70% 0px", threshold: 0 });
+  targets.forEach((t) => obs.observe(t));
+})();
+
+// Modo Sessão — apresentação seção por seção. Pro mentor projetar.
+(function() {
+  const toggle = document.getElementById("report-mode-toggle");
+  if (!toggle) return;
+  const sections = Array.from(document.querySelectorAll(".page, .toc-nav"));
+  let modeActive = false;
+  let idx = 0;
+  const indicator = document.createElement("div");
+  indicator.id = "session-indicator";
+  indicator.className = "session-indicator";
+  document.body.appendChild(indicator);
+  const navHints = document.createElement("div");
+  navHints.id = "session-nav-hints";
+  navHints.className = "session-nav-hints";
+  navHints.innerHTML = '<span>← →</span> navegar &nbsp;·&nbsp; <span>Esc</span> sair';
+  document.body.appendChild(navHints);
+
+  function render() {
+    sections.forEach((s, i) => {
+      if (modeActive && i !== idx) s.classList.add("session-hidden");
+      else s.classList.remove("session-hidden");
+    });
+    indicator.textContent = `${idx + 1} / ${sections.length}`;
+    if (modeActive) sections[idx].scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function enter() {
+    modeActive = true;
+    document.body.classList.add("session-mode");
+    toggle.textContent = "Sair do Modo Sessão";
+    render();
+  }
+  function exit() {
+    modeActive = false;
+    document.body.classList.remove("session-mode");
+    toggle.textContent = "Modo Sessão";
+    render();
+  }
+  function next() { if (modeActive && idx < sections.length - 1) { idx++; render(); } }
+  function prev() { if (modeActive && idx > 0) { idx--; render(); } }
+
+  toggle.addEventListener("click", () => modeActive ? exit() : enter());
+  document.addEventListener("keydown", (e) => {
+    if (!modeActive) return;
+    if (e.key === "Escape") exit();
+    else if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { e.preventDefault(); next(); }
+    else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); prev(); }
+  });
+})();
+</script>
 </body>
 </html>

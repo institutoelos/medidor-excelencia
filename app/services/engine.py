@@ -413,6 +413,63 @@ def calcular_consciencia_sistemica(respostas_por_item: dict[int, list[int]]) -> 
     }
 
 
+def detectar_vies_socio(
+    db: Session, rodada_id: int
+) -> dict:
+    """Detector heurístico de viés de desejabilidade social nas respostas do sócio.
+
+    Sinais que indicam que o sócio respondeu "no automático" / sem reflexão:
+    - std-dev das respostas Likert muito baixo (resposta uniforme)
+    - >80% das respostas em 4 ou 5 (otimismo extremo)
+
+    Retorna por sócio: {respondente_id, n_respostas, media, std_dev, pct_top2,
+    flag (None|'baixo_desvio'|'top_heavy'|'ambos')}. Lista vazia se nenhum sócio.
+    """
+    socios = (
+        db.query(RespondenteSocio)
+        .filter(RespondenteSocio.rodada_id == rodada_id, RespondenteSocio.finalizado_em.isnot(None))
+        .all()
+    )
+    if not socios:
+        return {"socios": [], "total_flaggeds": 0}
+
+    resultados = []
+    for s in socios:
+        vals = [
+            v for (v,) in db.query(Resposta.valor_likert).filter(
+                Resposta.respondente_id == s.id,
+                Resposta.tipo_respondente == "socio",
+            ).all()
+        ]
+        if not vals:
+            continue
+        n = len(vals)
+        media = sum(vals) / n
+        # std-dev populacional
+        var = sum((v - media) ** 2 for v in vals) / n
+        std = var ** 0.5
+        pct_top2 = sum(1 for v in vals if v >= 4) / n * 100
+
+        flags = []
+        if std < 0.5:
+            flags.append("baixo_desvio")
+        if pct_top2 >= 80:
+            flags.append("top_heavy")
+        flag = "ambos" if len(flags) == 2 else (flags[0] if flags else None)
+
+        resultados.append({
+            "respondente_id": s.id,
+            "n_respostas": n,
+            "media": round(media, 2),
+            "std_dev": round(std, 2),
+            "pct_top2": round(pct_top2, 1),
+            "flag": flag,
+        })
+
+    total_flaggeds = sum(1 for r in resultados if r["flag"])
+    return {"socios": resultados, "total_flaggeds": total_flaggeds}
+
+
 # ─── Gap Sócio vs Colaborador ──────────────────────────────────────────────
 
 def calcular_gap_por_item(
@@ -601,6 +658,9 @@ def calcular_relatorio_completo(db: Session, rodada_id: int) -> dict:
     # Consciência sistêmica (divergentes)
     consciencia = calcular_consciencia_sistemica(respostas_socio)
 
+    # Detector heurístico de viés do sócio
+    vies_socio = detectar_vies_socio(db, rodada_id)
+
     # Âncoras
     ancoras_colab = _ancoras(db, rodada_id, "colab")
     ancoras_socio = _ancoras(db, rodada_id, "socio")
@@ -677,6 +737,7 @@ def calcular_relatorio_completo(db: Session, rodada_id: int) -> dict:
         "gaps": gaps,
         "gaps_consolidados": gaps_consolidados,
         "consciencia": consciencia,
+        "vies_socio": vies_socio,
         "ancora": {
             "colab": {"top2": ancora_colab_t2, "media": ancora_colab_media, "n": len(ancoras_colab)},
             "socio": {"top2": ancora_socio_t2, "media": ancora_socio_media, "n": len(ancoras_socio)},

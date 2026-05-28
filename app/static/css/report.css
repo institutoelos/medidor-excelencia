@@ -52,6 +52,128 @@ body {
   font-weight: 600; color: var(--ink-dim);
 }
 
+/* Índice lateral sticky — aproveita o corredor esquerdo em telas largas */
+.report-rail { display: none; }
+@media screen and (min-width: 1200px) {
+  .report-rail {
+    display: block;
+    position: fixed;
+    top: 80px;
+    left: 24px;
+    width: max(180px, calc((100vw - 794px) / 2 - 48px));
+    max-width: 240px;
+    z-index: 9;
+  }
+  .report-rail__title {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    font-weight: 600;
+    margin: 0 0 10px;
+  }
+  .report-rail__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: rail;
+  }
+  .report-rail__list li { counter-increment: rail; margin: 0; }
+  .report-rail__list a {
+    display: block;
+    padding: 5px 10px 5px 24px;
+    position: relative;
+    font-size: 12px;
+    line-height: 1.3;
+    color: var(--ink-dim);
+    text-decoration: none;
+    border-left: 1.5px solid var(--hairline);
+    transition: color .12s ease, border-color .12s ease;
+  }
+  .report-rail__list a::before {
+    content: counter(rail, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    font-size: 9px;
+    color: var(--ink-muted);
+    top: 7px;
+  }
+  .report-rail__list a:hover { color: var(--ink); }
+  .report-rail__list a.is-active {
+    color: var(--copper);
+    border-left-color: var(--copper);
+    font-weight: 600;
+  }
+  /* No Modo Sessão o rail some — a navegação é por setas */
+  body.session-mode .report-rail { display: none; }
+}
+@media print {
+  .report-rail { display: none !important; }
+}
+
+/* Modo Sessão — apresentação pro mentor */
+.report-nav-mode {
+  left: auto;
+  right: 14px;
+  border: none;
+  background: var(--copper);
+  color: #fff;
+  cursor: pointer;
+}
+.report-nav-mode:hover {
+  background: var(--ink);
+  color: #fff;
+  border-color: transparent;
+}
+.session-hidden { display: none !important; }
+body.session-mode { background: var(--paper); }
+body.session-mode .page,
+body.session-mode .toc-nav {
+  min-height: calc(100vh - 60px);
+  margin: 0 auto;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+.session-indicator {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+  z-index: 11;
+  display: none;
+}
+.session-nav-hints {
+  position: fixed;
+  bottom: 14px;
+  right: 14px;
+  background: rgba(0,0,0,0.6);
+  color: var(--paper);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-family: var(--font-body);
+  z-index: 11;
+  display: none;
+}
+.session-nav-hints span {
+  background: rgba(255,255,255,0.15);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+body.session-mode .session-indicator,
+body.session-mode .session-nav-hints { display: block; }
+
+@media print {
+  .report-nav-mode, .session-indicator, .session-nav-hints { display: none !important; }
+}
+
 /* Botão "voltar pro painel" — só no browser, escondido no print */
 .report-nav-back {
   position: fixed;
@@ -192,7 +314,8 @@ body {
 
 @media screen {
   body { padding: 18px; }
-  .page {
+  .page,
+  .toc-nav {
     margin: 0 auto 24px;
     box-shadow: 0 4px 22px rgba(0,0,0,.08);
     border: 0.5px solid var(--hairline);
@@ -200,7 +323,8 @@ body {
 }
 @media print {
   body { padding: 0; background: var(--paper); }
-  .page { margin: 0; box-shadow: none; border: 0; }
+  .page,
+  .toc-nav { margin: 0; box-shadow: none; border: 0; }
 }
 
 h1.serif { font-family: var(--font-display); font-weight: 400; }
@@ -367,6 +491,54 @@ h3.serif { font-family: var(--font-display); font-weight: 400; }
 .prose--lead { font-size: 15px; color: var(--ink); max-width: 150mm; margin-bottom: 10mm; }
 .prose--small { font-size: 11px; color: var(--ink-dim); margin-top: 10mm; }
 .prose--small a { color: var(--copper); text-decoration: none; border-bottom: 0.5px solid var(--copper); }
+
+/* "Pra discutir na próxima sessão" — roteiro pro mentor */
+.mentor-prompts {
+  background: var(--card);
+  border: 0.5px solid var(--hairline);
+  border-left: 3px solid var(--copper);
+  border-radius: 6px;
+  padding: 5mm 6mm;
+  margin: 6mm 0;
+}
+.mentor-prompts__eyebrow { color: var(--copper); margin: 0 0 2mm; }
+.mentor-prompts__lead { font-size: 12px; color: var(--ink-dim); margin: 0 0 3mm; }
+.mentor-prompts__list {
+  margin: 0;
+  padding-left: 22px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  line-height: 1.55;
+}
+.mentor-prompts__list li { margin-bottom: 3mm; }
+.mentor-prompts__list strong { color: var(--ink); }
+
+/* Glossário inline — abbr com hover tooltip */
+.gloss-term {
+  border-bottom: 1px dotted var(--copper);
+  text-decoration: none;
+  cursor: help;
+  color: inherit;
+}
+.gloss-term:hover { background: var(--copper-soft); }
+@media print {
+  /* No PDF, o tooltip não funciona; tira a marcação visual */
+  .gloss-term { border-bottom: none; cursor: inherit; background: transparent; }
+}
+
+/* Aviso de viés do sócio (detector heurístico) */
+.vies-warning {
+  background: var(--amber-soft);
+  border: 1px solid var(--amber);
+  border-left-width: 4px;
+  border-radius: 6px;
+  padding: 5mm 6mm;
+  margin: 4mm 0 6mm;
+}
+.vies-warning__eyebrow { color: var(--amber); margin: 0 0 2mm; font-weight: 700; }
+.vies-warning p { margin: 0 0 3mm; font-size: 13px; color: var(--ink-2); line-height: 1.5; max-width: 165mm; }
+.vies-warning__list { margin: 0; padding-left: 18px; font-size: 12px; color: var(--ink-dim); }
+.vies-warning__list li { margin-bottom: 1mm; }
 
 /* Página "Pra você, dono" — resumo amigável antes da técnica */
 .page--owner { background: var(--card-soft); }

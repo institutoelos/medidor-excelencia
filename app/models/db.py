@@ -110,6 +110,13 @@ class Rodada(Base):
     token_colab: Mapped[str] = mapped_column(String(64), default=_gerar_token, unique=True, index=True)
     token_socio: Mapped[str] = mapped_column(String(64), default=_gerar_token, unique=True, index=True)
 
+    # Snapshot da estrutura da empresa no momento da abertura. Imutável depois —
+    # permite reaferição em 6/12m comparar com a mesma estrutura mesmo que a
+    # empresa tenha reestruturado nesse meio-tempo.
+    snapshot_areas: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    snapshot_tamanho_time: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    snapshot_qtd_socios: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+
     empresa: Mapped["Empresa"] = relationship(back_populates="rodadas")
     respondentes_colab: Mapped[list["RespondenteColab"]] = relationship(back_populates="rodada", cascade="all, delete-orphan")
     respondentes_socio: Mapped[list["RespondenteSocio"]] = relationship(back_populates="rodada", cascade="all, delete-orphan")
@@ -196,6 +203,9 @@ def init_db() -> None:
     # Migrações in-place pra bancos pré-existentes (Railway/Postgres em produção).
     with engine.begin() as conn:
         _ensure_column(conn, "respondentes_colab", "lider_direto", "VARCHAR(120)")
+        _ensure_column(conn, "rodadas", "snapshot_areas", "TEXT")
+        _ensure_column(conn, "rodadas", "snapshot_tamanho_time", "INTEGER")
+        _ensure_column(conn, "rodadas", "snapshot_qtd_socios", "INTEGER")
 
 
 # Cascade manual: ao deletar um respondente, limpa suas respostas (FK polimórfica)
